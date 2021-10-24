@@ -3,12 +3,13 @@ package metrics
 import (
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/argoproj/argo-cd/v2/util/profile"
 )
 
 type MetricsServer struct {
@@ -43,7 +44,7 @@ func NewMetricsServer(host string, port int) *MetricsServer {
 		registry,
 		prometheus.DefaultGatherer,
 	}, promhttp.HandlerOpts{}))
-	registerProfiler(mux)
+	profile.RegisterProfiler(mux)
 
 	registry.MustRegister(redisRequestCounter)
 	registry.MustRegister(redisRequestHistogram)
@@ -65,12 +66,4 @@ func (m *MetricsServer) IncRedisRequest(failed bool) {
 // ObserveRedisRequestDuration observes redis request duration
 func (m *MetricsServer) ObserveRedisRequestDuration(duration time.Duration) {
 	m.redisRequestHistogram.WithLabelValues("argocd-server").Observe(duration.Seconds())
-}
-
-func registerProfiler(mux *http.ServeMux) {
-	mux.HandleFunc("/debug/pprof/", pprof.Index)
-	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }

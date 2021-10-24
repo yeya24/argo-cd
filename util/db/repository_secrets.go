@@ -19,7 +19,8 @@ import (
 var _ repositoryBackend = &secretsRepositoryBackend{}
 
 type secretsRepositoryBackend struct {
-	db *db
+	db       *db
+	urlCache *gitURLCache
 }
 
 func (s *secretsRepositoryBackend) CreateRepository(ctx context.Context, repository *appsv1.Repository) (*appsv1.Repository, error) {
@@ -418,7 +419,7 @@ func (s *secretsRepositoryBackend) getRepoCredsSecret(repoURL string) (*corev1.S
 		return nil, err
 	}
 
-	index := s.getRepositoryCredentialIndex(secrets, repoURL)
+	index := s.getRepositoryCredentialIndex(s.urlCache, secrets, repoURL)
 	if index < 0 {
 		return nil, status.Errorf(codes.NotFound, "repository credentials %q not found", repoURL)
 	}
@@ -426,14 +427,24 @@ func (s *secretsRepositoryBackend) getRepoCredsSecret(repoURL string) (*corev1.S
 	return secrets[index], nil
 }
 
-func (s *secretsRepositoryBackend) getRepositoryCredentialIndex(repoCredentials []*corev1.Secret, repoURL string) int {
+func (s *secretsRepositoryBackend) getRepositoryCredentialIndex(urlCache *gitURLCache, repoCredentials []*corev1.Secret, repoURL string) int {
 	var max, idx = 0, -1
-	repoURL = git.NormalizeGitURL(repoURL)
+	var normalizedRepoURL string
+	normalizedRepoURL, exists := urlCache.Load(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		urlCache.Store(repoURL, normalizedRepoURL)
+	}
 	for i, cred := range repoCredentials {
-		credUrl := git.NormalizeGitURL(string(cred.Data["url"]))
-		if strings.HasPrefix(repoURL, credUrl) {
-			if len(credUrl) > max {
-				max = len(credUrl)
+		credURL := string(cred.Data["url"])
+		url, exists := urlCache.Load(credURL)
+		if !exists {
+			url = git.NormalizeGitURL(credURL)
+			urlCache.Store(credURL, url)
+		}
+		if strings.HasPrefix(normalizedRepoURL, url) {
+			if len(url) > max {
+				max = len(url)
 				idx = i
 			}
 		}

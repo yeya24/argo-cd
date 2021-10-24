@@ -28,6 +28,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/gpg"
 	"github.com/argoproj/argo-cd/v2/util/healthz"
 	ioutil "github.com/argoproj/argo-cd/v2/util/io"
+	"github.com/argoproj/argo-cd/v2/util/profile"
 	"github.com/argoproj/argo-cd/v2/util/tls"
 )
 
@@ -126,6 +127,7 @@ func NewCommand() *cobra.Command {
 				}
 				return nil
 			})
+			profile.RegisterProfiler(http.DefaultServeMux)
 			http.Handle("/metrics", metricsServer.GetHandler())
 			go func() { errors.CheckError(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil)) }()
 
