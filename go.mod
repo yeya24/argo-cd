@@ -62,13 +62,19 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/undefinedlabs/go-mpatch v1.0.6
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.25.0
+	go.opentelemetry.io/otel v1.0.1
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.0.1
+	go.opentelemetry.io/otel/sdk v1.0.1
+	go.opentelemetry.io/otel/trace v1.0.1
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a
-	google.golang.org/grpc v1.33.1
+	google.golang.org/grpc v1.41.0
+	google.golang.org/grpc/examples v0.0.0-20211021223902-4f21cde702d9 // indirect
 	gopkg.in/go-playground/webhooks.v5 v5.11.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.21.0
@@ -91,8 +97,6 @@ replace (
 	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway => github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/improbable-eng/grpc-web => github.com/improbable-eng/grpc-web v0.0.0-20181111100011-16092bd1d58a
-
-	google.golang.org/grpc => google.golang.org/grpc v1.15.0
 
 	k8s.io/api => k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.0
