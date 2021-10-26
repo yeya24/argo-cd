@@ -136,12 +136,14 @@ func appRBACName(app appv1.Application) string {
 // List returns list of applications
 func (s *Server) List(ctx context.Context, q *application.ApplicationQuery) (*appv1.ApplicationList, error) {
 	ctx, span := s.tracer.Start(ctx, "Application-List")
-	span.SetAttributes(attribute.String("name", *q.Name),
-		attribute.String("selector", q.Selector),
+	atributes := []attribute.KeyValue{attribute.String("selector", q.Selector),
 		attribute.String("resourceVersion", q.ResourceVersion),
 		attribute.String("repo", q.Repo),
-		attribute.String("projects", strings.Join(q.Projects, ",")),
-	)
+		attribute.String("projects", strings.Join(q.Projects, ","))}
+	if q.Name != nil {
+		atributes = append(atributes, attribute.String("name", *q.Name))
+	}
+	span.SetAttributes(atributes...)
 	defer span.End()
 
 	labelsMap, err := labels.ConvertSelectorToLabelsMap(q.Selector)
