@@ -135,9 +135,6 @@ func NewCommand() *cobra.Command {
 				}
 				defer closer()
 			}
-			// TODO(yeya24): now we register the tracerProvider globally so it can be used by grpc tracing.
-			// Pass it to ArgoCD server for more fine grained tracing.
-			_ = tracerProvider
 
 			argoCDOpts := server.ArgoCDServerOpts{
 				Insecure:            insecure,
@@ -157,6 +154,7 @@ func NewCommand() *cobra.Command {
 				XFrameOptions:       frameOptions,
 				RedisClient:         redisClient,
 				StaticAssetsDir:     staticAssetsDir,
+				TraceProvider:       tracerProvider,
 			}
 
 			stats.RegisterStackDumper()

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"math"
 	"reflect"
 	"sort"
@@ -84,6 +86,7 @@ type Server struct {
 	settingsMgr    *settings.SettingsManager
 	cache          *servercache.Cache
 	projInformer   cache.SharedIndexInformer
+	tracer         trace.Tracer
 }
 
 // NewServer returns a new instance of the Application service
@@ -101,6 +104,7 @@ func NewServer(
 	projectLock sync.KeyLock,
 	settingsMgr *settings.SettingsManager,
 	projInformer cache.SharedIndexInformer,
+	tracer trace.Tracer,
 ) application.ApplicationServiceServer {
 	appBroadcaster := &broadcasterHandler{}
 	appInformer.AddEventHandler(appBroadcaster)
@@ -120,6 +124,7 @@ func NewServer(
 		auditLogger:    argo.NewAuditLogger(namespace, kubeclientset, "argocd-server"),
 		settingsMgr:    settingsMgr,
 		projInformer:   projInformer,
+		tracer:         tracer,
 	}
 }
 
@@ -130,6 +135,15 @@ func appRBACName(app appv1.Application) string {
 
 // List returns list of applications
 func (s *Server) List(ctx context.Context, q *application.ApplicationQuery) (*appv1.ApplicationList, error) {
+	ctx, span := s.tracer.Start(ctx, "Application-List")
+	span.SetAttributes(attribute.String("name", *q.Name),
+		attribute.String("selector", q.Selector),
+		attribute.String("resourceVersion", q.ResourceVersion),
+		attribute.String("repo", q.Repo),
+		attribute.String("projects", strings.Join(q.Projects, ",")),
+	)
+	defer span.End()
+
 	labelsMap, err := labels.ConvertSelectorToLabelsMap(q.Selector)
 	if err != nil {
 		return nil, err
@@ -138,12 +152,14 @@ func (s *Server) List(ctx context.Context, q *application.ApplicationQuery) (*ap
 	if err != nil {
 		return nil, err
 	}
+	_, span = s.tracer.Start(ctx, "RBAC.Enforce")
 	newItems := make([]appv1.Application, 0)
 	for _, a := range apps {
 		if s.enf.Enforce(ctx.Value("claims"), rbacpolicy.ResourceApplications, rbacpolicy.ActionGet, appRBACName(*a)) {
 			newItems = append(newItems, *a)
 		}
 	}
+	span.End()
 	if q.Name != nil {
 		newItems, err = argoutil.FilterByName(newItems, *q.Name)
 		if err != nil {

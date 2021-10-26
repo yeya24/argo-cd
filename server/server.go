@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"go.opentelemetry.io/otel/trace"
 	"io/fs"
 	"math"
 	"net"
@@ -187,6 +188,7 @@ type ArgoCDServerOpts struct {
 	TLSConfigCustomizer tlsutil.ConfigCustomizer
 	XFrameOptions       string
 	ListenHost          string
+	TraceProvider       trace.TracerProvider
 }
 
 // initializeDefaultProject creates the default project if it does not already exist
@@ -586,7 +588,8 @@ func (a *ArgoCDServer) newGRPCServer() *grpc.Server {
 		a.enf,
 		projectLock,
 		a.settingsMgr,
-		a.projInformer)
+		a.projInformer,
+		a.TraceProvider.Tracer("applications"))
 	projectService := project.NewServer(a.Namespace, a.KubeClientset, a.AppClientset, a.enf, projectLock, a.sessionMgr, a.policyEnforcer, a.projInformer, a.settingsMgr, db)
 	settingsService := settings.NewServer(a.settingsMgr, a, a.DisableAuth)
 	accountService := account.NewServer(a.sessionMgr, a.settingsMgr, a.enf)
