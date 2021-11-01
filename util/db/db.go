@@ -83,7 +83,6 @@ type db struct {
 	ns            string
 	kubeclientset kubernetes.Interface
 	settingsMgr   *settings.SettingsManager
-	urlCache      *gitURLCache
 }
 
 // NewDB returns a new instance of the argo database
@@ -92,7 +91,6 @@ func NewDB(namespace string, settingsMgr *settings.SettingsManager, kubeclientse
 		settingsMgr:   settingsMgr,
 		ns:            namespace,
 		kubeclientset: kubeclientset,
-		urlCache:      newGitURLCache(),
 	}
 }
 
