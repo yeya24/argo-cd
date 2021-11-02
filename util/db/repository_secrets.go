@@ -19,8 +19,7 @@ import (
 var _ repositoryBackend = &secretsRepositoryBackend{}
 
 type secretsRepositoryBackend struct {
-	db       *db
-	urlCache *gitURLCache
+	db *db
 }
 
 func (s *secretsRepositoryBackend) CreateRepository(ctx context.Context, repository *appsv1.Repository) (*appsv1.Repository, error) {
@@ -404,8 +403,20 @@ func (s *secretsRepositoryBackend) getRepositorySecret(repoURL string) (*corev1.
 		return nil, err
 	}
 
+	var normalizedRepoURL string
+	normalizedRepoURL, exists := s.db.urlCache.Load(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		s.db.urlCache.Store(repoURL, normalizedRepoURL)
+	}
 	for _, secret := range secrets {
-		if git.SameURL(string(secret.Data["url"]), repoURL) {
+		secretURL := string(secret.Data["url"])
+		url, exists := s.db.urlCache.Load(secretURL)
+		if !exists {
+			url = git.NormalizeGitURL(secretURL)
+			s.db.urlCache.Store(secretURL, url)
+		}
+		if url == normalizedRepoURL {
 			return secret, nil
 		}
 	}
@@ -419,7 +430,7 @@ func (s *secretsRepositoryBackend) getRepoCredsSecret(repoURL string) (*corev1.S
 		return nil, err
 	}
 
-	index := s.getRepositoryCredentialIndex(s.urlCache, secrets, repoURL)
+	index := s.getRepositoryCredentialIndex(secrets, repoURL)
 	if index < 0 {
 		return nil, status.Errorf(codes.NotFound, "repository credentials %q not found", repoURL)
 	}
@@ -427,20 +438,20 @@ func (s *secretsRepositoryBackend) getRepoCredsSecret(repoURL string) (*corev1.S
 	return secrets[index], nil
 }
 
-func (s *secretsRepositoryBackend) getRepositoryCredentialIndex(urlCache *gitURLCache, repoCredentials []*corev1.Secret, repoURL string) int {
+func (s *secretsRepositoryBackend) getRepositoryCredentialIndex(repoCredentials []*corev1.Secret, repoURL string) int {
 	var max, idx = 0, -1
 	var normalizedRepoURL string
-	normalizedRepoURL, exists := urlCache.Load(repoURL)
+	normalizedRepoURL, exists := s.db.urlCache.Load(repoURL)
 	if !exists {
 		normalizedRepoURL = git.NormalizeGitURL(repoURL)
-		urlCache.Store(repoURL, normalizedRepoURL)
+		s.db.urlCache.Store(repoURL, normalizedRepoURL)
 	}
 	for i, cred := range repoCredentials {
 		credURL := string(cred.Data["url"])
-		url, exists := urlCache.Load(credURL)
+		url, exists := s.db.urlCache.Load(credURL)
 		if !exists {
 			url = git.NormalizeGitURL(credURL)
-			urlCache.Store(credURL, url)
+			s.db.urlCache.Store(credURL, url)
 		}
 		if strings.HasPrefix(normalizedRepoURL, url) {
 			if len(url) > max {

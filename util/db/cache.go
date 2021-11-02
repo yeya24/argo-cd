@@ -1,6 +1,9 @@
 package db
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type gitURLCache struct {
 	cache map[string]string
@@ -21,5 +24,6 @@ func (c *gitURLCache) Load(url string) (string, bool) {
 func (c *gitURLCache) Store(url, normalizedURL string) {
 	c.Lock()
 	c.cache[url] = normalizedURL
+	fmt.Printf("cache size is %d", len(c.cache))
 	c.Unlock()
 }
