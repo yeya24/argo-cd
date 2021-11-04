@@ -403,8 +403,11 @@ func (s *secretsRepositoryBackend) getRepositorySecret(repoURL string) (*corev1.
 		return nil, err
 	}
 
+
+	normalizedRepoURL := git.NormalizeGitURL(repoURL)
 	for _, secret := range secrets {
-		if git.SameURL(string(secret.Data["url"]), repoURL) {
+		url := git.NormalizeGitURL(string(secret.Data["url"]))
+		if url == normalizedRepoURL {
 			return secret, nil
 		}
 	}
