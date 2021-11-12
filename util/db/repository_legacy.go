@@ -443,25 +443,9 @@ func (l *legacyRepositoryBackend) setSecretData(prefix string, url string, secre
 }
 
 func (l *legacyRepositoryBackend) getRepositoryIndex(repos []settings.Repository, repoURL string) int {
-	var (
-		normalizedRepoURL string
-		url               string
-	)
-	res, exists := l.db.reposCache.Get(repoURL)
-	if !exists {
-		normalizedRepoURL = git.NormalizeGitURL(repoURL)
-		l.db.reposCache.Add(repoURL, normalizedRepoURL)
-	} else {
-		normalizedRepoURL = res.(string)
-	}
+	normalizedRepoURL := git.NormalizeGitURL(repoURL)
 	for i, repo := range repos {
-		res, exists := l.db.reposCache.Get(repo.URL)
-		if !exists {
-			url = git.NormalizeGitURL(repo.URL)
-			l.db.reposCache.Add(repo.URL, url)
-		} else {
-			url = res.(string)
-		}
+		url := git.NormalizeGitURL(repo.URL)
 		if url == normalizedRepoURL {
 			return i
 		}
@@ -473,25 +457,9 @@ func (l *legacyRepositoryBackend) getRepositoryIndex(repos []settings.Repository
 // configuration, i.e. the one with the longest match
 func (l *legacyRepositoryBackend) getRepositoryCredentialIndex(repoCredentials []settings.RepositoryCredentials, repoURL string) int {
 	var max, idx = 0, -1
-	var (
-		normalizedRepoURL string
-		url               string
-	)
-	res, exists := l.db.reposCache.Get(repoURL)
-	if !exists {
-		normalizedRepoURL = git.NormalizeGitURL(repoURL)
-		l.db.reposCache.Add(repoURL, normalizedRepoURL)
-	} else {
-		normalizedRepoURL = res.(string)
-	}
+	normalizedRepoURL := git.NormalizeGitURL(repoURL)
 	for i, cred := range repoCredentials {
-		res, exists := l.db.reposCache.Get(cred.URL)
-		if !exists {
-			url = git.NormalizeGitURL(cred.URL)
-			l.db.reposCache.Add(cred.URL, url)
-		} else {
-			url = res.(string)
-		}
+		url := git.NormalizeGitURL(cred.URL)
 		if strings.HasPrefix(normalizedRepoURL, url) {
 			if len(url) > max {
 				max = len(url)
