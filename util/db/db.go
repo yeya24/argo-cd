@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	lru "github.com/hashicorp/golang-lru"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -33,6 +34,8 @@ type ArgoDB interface {
 	UpdateCluster(ctx context.Context, c *appv1.Cluster) (*appv1.Cluster, error)
 	// DeleteCluster deletes a cluster by name
 	DeleteCluster(ctx context.Context, server string) error
+	// ListClusterSecrets lists all cluster secrets.
+	ListClusterSecrets(ctx context.Context) ([]*v1.Secret, error)
 
 	// ListRepositories lists repositories
 	ListRepositories(ctx context.Context) ([]*appv1.Repository, error)
@@ -83,14 +86,18 @@ type db struct {
 	ns            string
 	kubeclientset kubernetes.Interface
 	settingsMgr   *settings.SettingsManager
+	reposCache    *lru.Cache
 }
 
 // NewDB returns a new instance of the argo database
 func NewDB(namespace string, settingsMgr *settings.SettingsManager, kubeclientset kubernetes.Interface) ArgoDB {
+	// We ignore the error here as this only happens if size < 0.
+	cache, _ := lru.New(2048)
 	return &db{
 		settingsMgr:   settingsMgr,
 		ns:            namespace,
 		kubeclientset: kubeclientset,
+		reposCache:    cache,
 	}
 }
 

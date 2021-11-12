@@ -432,8 +432,24 @@ func (s *secretsRepositoryBackend) getRepositorySecret(repoURL string) (*corev1.
 		return nil, err
 	}
 
+	var normalizedRepoURL string
+	res, exists := s.db.reposCache.Get(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		s.db.reposCache.Add(repoURL, normalizedRepoURL)
+	} else {
+		normalizedRepoURL = res.(string)
+	}
 	for _, secret := range secrets {
-		if git.SameURL(string(secret.Data["url"]), repoURL) {
+		secretURL := string(secret.Data["url"])
+		url, exists := s.db.reposCache.Get(secretURL)
+		if !exists {
+			url = git.NormalizeGitURL(secretURL)
+			s.db.reposCache.Add(secretURL, url)
+		} else {
+			url = res.(string)
+		}
+		if url == normalizedRepoURL {
 			return secret, nil
 		}
 	}
@@ -457,12 +473,30 @@ func (s *secretsRepositoryBackend) getRepoCredsSecret(repoURL string) (*corev1.S
 
 func (s *secretsRepositoryBackend) getRepositoryCredentialIndex(repoCredentials []*corev1.Secret, repoURL string) int {
 	var max, idx = 0, -1
+	var (
+		normalizedRepoURL string
+		url               string
+	)
+	res, exists := s.db.reposCache.Get(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		s.db.reposCache.Add(repoURL, normalizedRepoURL)
+	} else {
+		normalizedRepoURL = res.(string)
+	}
 	repoURL = git.NormalizeGitURL(repoURL)
 	for i, cred := range repoCredentials {
-		credUrl := git.NormalizeGitURL(string(cred.Data["url"]))
-		if strings.HasPrefix(repoURL, credUrl) {
-			if len(credUrl) > max {
-				max = len(credUrl)
+		credURL := string(cred.Data["url"])
+		res, exists := s.db.reposCache.Get(credURL)
+		if !exists {
+			url = git.NormalizeGitURL(credURL)
+			s.db.reposCache.Add(credURL, url)
+		} else {
+			url = res.(string)
+		}
+		if strings.HasPrefix(normalizedRepoURL, url) {
+			if len(url) > max {
+				max = len(url)
 				idx = i
 			}
 		}

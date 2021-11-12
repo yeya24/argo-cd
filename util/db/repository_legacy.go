@@ -149,7 +149,7 @@ func (l *legacyRepositoryBackend) GetRepoCreds(ctx context.Context, repoURL stri
 	if err != nil {
 		return nil, err
 	}
-	index := getRepositoryCredentialIndex(repoCredentials, repoURL)
+	index := l.getRepositoryCredentialIndex(repoCredentials, repoURL)
 	if index >= 0 {
 		credential, err = l.credentialsToRepositoryCredentials(repoCredentials[index])
 		if err != nil {
@@ -180,7 +180,7 @@ func (l *legacyRepositoryBackend) UpdateRepoCreds(ctx context.Context, r *appsv1
 		return nil, err
 	}
 
-	index := getRepositoryCredentialIndex(repos, r.URL)
+	index := l.getRepositoryCredentialIndex(repos, r.URL)
 	if index < 0 {
 		return nil, status.Errorf(codes.NotFound, "repository credentials '%s' not found", r.URL)
 	}
@@ -205,7 +205,7 @@ func (l *legacyRepositoryBackend) DeleteRepoCreds(ctx context.Context, name stri
 		return err
 	}
 
-	index := getRepositoryCredentialIndex(repos, name)
+	index := l.getRepositoryCredentialIndex(repos, name)
 	if index < 0 {
 		return status.Errorf(codes.NotFound, "repository credentials '%s' not found", name)
 	}
@@ -230,7 +230,7 @@ func (l *legacyRepositoryBackend) RepoCredsExists(ctx context.Context, repoURL s
 		return false, err
 	}
 
-	index := getRepositoryCredentialIndex(creds, repoURL)
+	index := l.getRepositoryCredentialIndex(creds, repoURL)
 	return index >= 0, nil
 }
 
@@ -443,8 +443,26 @@ func (l *legacyRepositoryBackend) setSecretData(prefix string, url string, secre
 }
 
 func (l *legacyRepositoryBackend) getRepositoryIndex(repos []settings.Repository, repoURL string) int {
+	var (
+		normalizedRepoURL string
+		url               string
+	)
+	res, exists := l.db.reposCache.Get(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		l.db.reposCache.Add(repoURL, normalizedRepoURL)
+	} else {
+		normalizedRepoURL = res.(string)
+	}
 	for i, repo := range repos {
-		if git.SameURL(repo.URL, repoURL) {
+		res, exists := l.db.reposCache.Get(repo.URL)
+		if !exists {
+			url = git.NormalizeGitURL(repo.URL)
+			l.db.reposCache.Add(repo.URL, url)
+		} else {
+			url = res.(string)
+		}
+		if url == normalizedRepoURL {
 			return i
 		}
 	}
@@ -453,14 +471,30 @@ func (l *legacyRepositoryBackend) getRepositoryIndex(repos []settings.Repository
 
 // getRepositoryCredentialIndex returns the index of the best matching repository credential
 // configuration, i.e. the one with the longest match
-func getRepositoryCredentialIndex(repoCredentials []settings.RepositoryCredentials, repoURL string) int {
-	var max, idx int = 0, -1
-	repoURL = git.NormalizeGitURL(repoURL)
+func (l *legacyRepositoryBackend) getRepositoryCredentialIndex(repoCredentials []settings.RepositoryCredentials, repoURL string) int {
+	var max, idx = 0, -1
+	var (
+		normalizedRepoURL string
+		url               string
+	)
+	res, exists := l.db.reposCache.Get(repoURL)
+	if !exists {
+		normalizedRepoURL = git.NormalizeGitURL(repoURL)
+		l.db.reposCache.Add(repoURL, normalizedRepoURL)
+	} else {
+		normalizedRepoURL = res.(string)
+	}
 	for i, cred := range repoCredentials {
-		credUrl := git.NormalizeGitURL(cred.URL)
-		if strings.HasPrefix(repoURL, credUrl) {
-			if len(credUrl) > max {
-				max = len(credUrl)
+		res, exists := l.db.reposCache.Get(cred.URL)
+		if !exists {
+			url = git.NormalizeGitURL(cred.URL)
+			l.db.reposCache.Add(cred.URL, url)
+		} else {
+			url = res.(string)
+		}
+		if strings.HasPrefix(normalizedRepoURL, url) {
+			if len(url) > max {
+				max = len(url)
 				idx = i
 			}
 		}
