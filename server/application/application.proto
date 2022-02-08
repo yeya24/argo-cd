@@ -228,6 +228,17 @@ message ManagedResourcesResponse {
 	repeated github.com.argoproj.argo_cd.v2.pkg.apis.application.v1alpha1.ResourceDiff items = 1;
 }
 
+message ApplicationPodShellQuery {
+	required string name = 1;
+	required string namespace = 2 [(gogoproto.nullable) = false];
+	required string podName = 3 [(gogoproto.nullable) = false];
+	required string container = 4 [(gogoproto.nullable) = false];
+}
+
+message ApplicationPodShellResponse {
+	required string sessionID = 1 [(gogoproto.nullable) = false];
+}
+
 // ApplicationService
 service ApplicationService {
 
@@ -379,6 +390,13 @@ service ApplicationService {
 			additional_bindings {
 				get: "/api/v1/applications/{name}/logs"
 			}
+		};
+	}
+
+	// PodLogs returns stream of log entries for the specified pod. Pod
+	rpc PodShell(ApplicationPodShellQuery) returns (ApplicationPodShellResponse) {
+		option (google.api.http) = {
+			get: "/api/v1/applications/{name}/pods/{podName}/{container}/shell"
 		};
 	}
 }

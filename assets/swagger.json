@@ -969,6 +969,54 @@
         }
       }
     },
+    "/api/v1/applications/{name}/pods/{podName}/{container}/shell": {
+      "get": {
+        "tags": [
+          "ApplicationService"
+        ],
+        "summary": "PodLogs returns stream of log entries for the specified pod. Pod",
+        "operationId": "ApplicationService_PodShell",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "podName",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "container",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "namespace",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/applicationApplicationPodShellResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
     "/api/v1/applications/{name}/resource": {
       "get": {
         "tags": [
@@ -3387,6 +3435,14 @@
           "type": "string"
         },
         "patchType": {
+          "type": "string"
+        }
+      }
+    },
+    "applicationApplicationPodShellResponse": {
+      "type": "object",
+      "properties": {
+        "sessionID": {
           "type": "string"
         }
       }

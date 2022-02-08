@@ -249,6 +249,16 @@ export class PodView extends React.Component<PodViewProps> {
                                                                         {
                                                                             title: (
                                                                                 <React.Fragment>
+                                                                                    <i className='fa fa-align-left' /> Shell
+                                                                                </React.Fragment>
+                                                                            ),
+                                                                            action: () => {
+                                                                                this.appContext.apis.navigation.goto('.', {node: pod.fullName, tab: 'shell'}, {replace: true});
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            title: (
+                                                                                <React.Fragment>
                                                                                     <i className='fa fa-times-circle' /> Delete
                                                                                 </React.Fragment>
                                                                             ),
