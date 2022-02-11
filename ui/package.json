@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "ansi-to-react": "^6.1.6",
-    "argo-ui": "git+https://github.com/argoproj/argo-ui.git",
+    "argo-ui": "^1.0.0",
     "buffer": "^6.0.3",
     "classnames": "^2.2.5",
     "color": "^3.1.0",
@@ -26,7 +26,7 @@
     "minimatch": "^3.0.4",
     "moment": "^2.24.0",
     "monaco-editor": "^0.27.0",
-    "path": "^0.12.7" ,
+    "path": "^0.12.7",
     "prop-types": "^15.6.0",
     "react": "^16.9.3",
     "react-autocomplete": "^1.8.1",
@@ -47,7 +47,9 @@
     "superagent-promise": "^1.1.0",
     "timezones-list": "3.0.1",
     "unidiff": "^1.0.2",
-    "url": "^0.11.0"
+    "url": "^0.11.0",
+    "xterm": "^4.18.0",
+    "xterm-addon-fit": "^0.5.0"
   },
   "resolutions": {
     "@types/react": "^16.9.3",
@@ -91,11 +93,11 @@
     "jest-junit": "^6.4.0",
     "jest-transform-css": "^2.0.0",
     "monaco-editor-webpack-plugin": "^6.0.0",
-    "sass": "^1.49.9",
     "postcss": "^8.2.13",
     "prettier": "1.19",
     "raw-loader": "^0.5.1",
     "react-test-renderer": "16.8.3",
+    "sass": "^1.49.9",
     "sass-loader": "^12.6.0",
     "source-map-loader": "^0.2.3",
     "style-loader": "^0.20.1",
@@ -108,8 +110,8 @@
     "tslint-react": "^3.4.0",
     "typescript": "^4.0.3",
     "webpack": "^5.70.0",
-    "yarn": "^1.22.10",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.7.4"
+    "webpack-dev-server": "^4.7.4",
+    "yarn": "^1.22.10"
   }
 }
