@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/argoproj/argo-cd/v2/server/terminal"
 	"io/fs"
 	"math"
 	"net"
@@ -159,6 +160,7 @@ type ArgoCDServer struct {
 	policyEnforcer *rbacpolicy.RBACPolicyEnforcer
 	appInformer    cache.SharedIndexInformer
 	appLister      applisters.ApplicationNamespaceLister
+	db             db.ArgoDB
 
 	// stopCh is the channel which when closed, will shutdown the Argo CD server
 	stopCh           chan struct{}
@@ -255,6 +257,7 @@ func NewServer(ctx context.Context, opts ArgoCDServerOpts) *ArgoCDServer {
 		policyEnforcer:   policyEnf,
 		userStateStorage: userStateStorage,
 		staticAssets:     http.FS(staticFS),
+		db:               db.NewDB(opts.Namespace, settingsMgr, opts.KubeClientset),
 	}
 }
 
@@ -577,11 +580,10 @@ func (a *ArgoCDServer) newGRPCServer() *grpc.Server {
 		grpc_util.PanicLoggerUnaryServerInterceptor(a.log),
 	)))
 	grpcS := grpc.NewServer(sOpts...)
-	db := db.NewDB(a.Namespace, a.settingsMgr, a.KubeClientset)
 	kubectl := kubeutil.NewKubectl()
-	clusterService := cluster.NewServer(db, a.enf, a.Cache, kubectl)
-	repoService := repository.NewServer(a.RepoClientset, db, a.enf, a.Cache, a.settingsMgr)
-	repoCredsService := repocreds.NewServer(a.RepoClientset, db, a.enf, a.settingsMgr)
+	clusterService := cluster.NewServer(a.db, a.enf, a.Cache, kubectl)
+	repoService := repository.NewServer(a.RepoClientset, a.db, a.enf, a.Cache, a.settingsMgr)
+	repoCredsService := repocreds.NewServer(a.RepoClientset, a.db, a.enf, a.settingsMgr)
 	var loginRateLimiter func() (io.Closer, error)
 	if maxConcurrentLoginRequestsCount > 0 {
 		loginRateLimiter = session.NewLoginRateLimiter(maxConcurrentLoginRequestsCount)
@@ -597,16 +599,16 @@ func (a *ArgoCDServer) newGRPCServer() *grpc.Server {
 		a.RepoClientset,
 		a.Cache,
 		kubectl,
-		db,
+		a.db,
 		a.enf,
 		projectLock,
 		a.settingsMgr,
 		a.projInformer)
-	projectService := project.NewServer(a.Namespace, a.KubeClientset, a.AppClientset, a.enf, projectLock, a.sessionMgr, a.policyEnforcer, a.projInformer, a.settingsMgr, db)
+	projectService := project.NewServer(a.Namespace, a.KubeClientset, a.AppClientset, a.enf, projectLock, a.sessionMgr, a.policyEnforcer, a.projInformer, a.settingsMgr, a.db)
 	settingsService := settings.NewServer(a.settingsMgr, a, a.DisableAuth)
 	accountService := account.NewServer(a.sessionMgr, a.settingsMgr, a.enf)
-	certificateService := certificate.NewServer(a.RepoClientset, db, a.enf)
-	gpgkeyService := gpgkey.NewServer(a.RepoClientset, db, a.enf)
+	certificateService := certificate.NewServer(a.RepoClientset, a.db, a.enf)
+	gpgkeyService := gpgkey.NewServer(a.RepoClientset, a.db, a.enf)
 	versionpkg.RegisterVersionServiceServer(grpcS, version.NewServer(a, func() (bool, error) {
 		if a.DisableAuth {
 			return true, nil
@@ -743,6 +745,7 @@ func (a *ArgoCDServer) newHTTPServer(ctx context.Context, port int, grpcWebHandl
 		handler = compressHandler(handler)
 	}
 	mux.Handle("/api/", handler)
+	mux.Handle("/terminal", terminal.NewHandler(a.appLister, a.db, a.enf, a.Cache))
 
 	mustRegisterGWHandler(versionpkg.RegisterVersionServiceHandlerFromEndpoint, ctx, gwmux, endpoint, dOpts)
 	mustRegisterGWHandler(clusterpkg.RegisterClusterServiceHandlerFromEndpoint, ctx, gwmux, endpoint, dOpts)

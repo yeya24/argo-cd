@@ -113,6 +113,46 @@ export const ResourceDetails = (props: ResourceDetailsProps) => {
                             </div>
                         </div>
                     )
+                },
+                {
+                    key: 'exec',
+                    icon: 'fa fa-align-left',
+                    title: 'Terminal',
+                    content: (
+                        <div className='application-details__tab-content-full-height'>
+                            <div className='row'>
+                                <div className='columns small-3 medium-2'>
+                                    {containerGroups.map(group => (
+                                        <div key={group.title} style={{marginBottom: '1em'}}>
+                                            {group.containers.length > 0 && <p>{group.title}</p>}
+                                            {group.containers.map((container: any, i: number) => (
+                                                <div
+                                                    className='application-details__container'
+                                                    key={container.name}
+                                                    onClick={() => SelectNode(selectedNodeKey, group.offset + i, 'exec', appContext)}>
+                                                    {group.offset + i === selectedNodeInfo.container && <i className='fa fa-angle-right' />}
+                                                    <span title={container.name}>{container.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className='columns small-9 medium-10'>
+                                    <PodsLogsViewer
+                                        podName={(state.kind === 'Pod' && state.metadata.name) || ''}
+                                        group={node.group}
+                                        kind={node.kind}
+                                        name={node.name}
+                                        namespace={podState.metadata.namespace}
+                                        applicationName={application.metadata.name}
+                                        containerName={AppUtils.getContainerName(podState, selectedNodeInfo.container)}
+                                        page={{number: page, untilTimes}}
+                                        setPage={pageData => appContext.navigation.goto('.', {page: pageData.number, untilTimes: pageData.untilTimes.join(',')})}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )
                 }
             ]);
         }
