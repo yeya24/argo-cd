@@ -1699,7 +1699,9 @@ func (ctrl *ApplicationController) newApplicationInformerAndLister() (cache.Shar
 					// If the server field is not set, set it based on the cluster name; if the cluster name can't be found,
 					// log an error as an App Condition.
 					if err := argo.ValidateDestination(context.Background(), &app.Spec.Destination, ctrl.db); err != nil {
-						ctrl.setAppCondition(app, appv1.ApplicationCondition{Type: appv1.ApplicationConditionInvalidSpecError, Message: err.Error()})
+						if !strings.Contains(err.Error(), "unable to find destination server") {
+							ctrl.setAppCondition(app, appv1.ApplicationCondition{Type: appv1.ApplicationConditionInvalidSpecError, Message: err.Error()})
+						}
 					}
 				}
 

@@ -19,6 +19,247 @@
         </p>
     </noscript>
     <div id="app"></div>
+    <script>
+        const isIframe = window.location.search.includes('mode=iframe') || window.sessionStorage.getItem('isIframe');
+        const pathname = window.location.pathname;
+        listenParentMessage();
+
+        if (isIframe && !window.sessionStorage.getItem('isIframe')) {
+            window.sessionStorage.setItem('isIframe', 'true');
+        }
+
+        if (isIframe && (pathname === '/applications' || /\/applications\/.+/.test(pathname))) {
+            hideAppSideBars();
+        }
+
+        function listenParentMessage() {
+            const trustedOrigins = ['https://bge-dev.byted.org', 'https://bge-stg.byted.org', 'https://bge.byted.org']
+            window.onmessage = function (event) {
+                console.log('message =>', event)
+                if (event.data === 'hideSideBar') {
+                    console.log('hideAppSideBars ==>')
+                    hideAppSideBars();
+                }
+
+                if (event.data === 'logout' && trustedOrigins.includes(event.origin)) {
+                    fetch('auth/logout',  {
+                        method: 'GET',
+                        credentials: 'include'
+                    }).then((res) => {
+                        console.log('logout res', res)
+                        top.postMessage({message: 'argocd-logout', payload: res.status}, event.origin);
+                    })
+                }
+            };
+        }
+        function hideAppSideBars() {
+            const ele = document.createElement('style');
+            ele.innerHTML = `
+              .top-bar {
+                line-height: 40px;
+              }
+
+              .top-bar__left-side > div {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                height: 40px !important;
+              }
+              .top-bar__right-side .application-details__view-type {
+                margin-bottom: 0;
+              }
+
+              .top-bar__right-side i {
+                font-size: 12px;
+              }
+
+              .argo-button {
+                font-size: 11px;
+                padding: 4px 16px;
+                font-weight: 400;
+                height: unset !important;
+              }
+
+              .application-details .page__top-bar {
+                height: 40px;
+                left: 0;
+              }
+
+              .page__content-wrapper {
+                min-height: calc(100vh - 80px);
+                top: -50px;
+              }
+
+              .application-details .page__content-wrapper {
+                top: 0px;
+              }
+
+              .application-details__status-panel {
+                top: 40px;
+                left: 0;
+              }
+              .application-details .application-details__tree {
+                margin-top: 95px;
+              }
+
+              @media screen and (max-width: 1200px) {
+                .application-details__status-panel {
+                  top: 80px;
+                }
+
+                .application-details .application-details__tree {
+                  margin-top: 145px;
+                }
+              }
+
+              .application-status-panel > div {
+                margin-top: 0;
+              }
+
+              .application-status-panel .argo-button {
+                padding: 0;
+              }
+
+              .application-status-panel__item-name {
+                margin: 0;
+              }
+
+              .application-status-panel__item-value {
+                font-size: 1.5em;
+              }
+
+              .application-status-panel__item {
+                gap: 4px;
+                padding: 8px 20px;
+                height: unset;
+              }
+
+              .application-status-panel__item__row div:last-child {
+                font-weight: 400;
+              }
+
+              .application-details .filters-group__panel {
+                width: unset;
+                top: 180px;
+                left: 0;
+              }
+
+              .applications-list .filters-group__panel {
+                left: 0;
+              }
+
+              @media screen and (max-width: 74.99875em) {
+                .application-details .filters-group__panel {
+                  top: 230px;
+                }
+              }
+
+              .filter__header {
+                height: unset;
+                font-weight: 400;
+                display: flex;
+                justify-content: space-between;
+              }
+
+              .application-details .input {
+                padding: 2px 6px;
+                margin-bottom: 0 !important;
+              }
+
+              .application-details .input::placeholder {
+                font-size: 13px;
+                font-weight: 400;
+              }
+
+              .filter__item {
+                font-size: 14px;
+                margin: 0.3em 0;
+                font-weight: 400;
+              }
+
+              .filters-group__panel {
+                width: unset;
+              }
+
+              .filters-group__panel .filter {
+                min-width: 165px;
+                max-width: 195px;
+                width: unset;
+              }
+
+              .filters-group__panel__title {
+                width: unset;
+                min-width: 165px;
+                max-width: 195px;
+                display: inline-flex;
+                justify-content: space-between;
+              }
+
+              .filters-group__panel > div {
+                margin-bottom: 0.7em;
+              }
+
+              .filters-group .argo-button {
+                padding: 2px 8px;
+                font-size: 11px;
+                font-weight: 400;
+                line-height: unset;
+              }
+
+              @media screen and (max-width: 89.99875em) {
+                .application-details
+                  .filters-group:not(.filters-group--expanded)
+                  .filters-group__panel:not(.filters-group__panel:hover)
+                  .filters-group__panel__title {
+                  display: block;
+                }
+              }
+
+              .filters-group__toggle {
+                position: relative;
+                left: unset;
+              }
+
+              .nav-bar {
+                display: none;
+              }
+              .login-logout-button {
+                display: none;
+              }
+              .page {
+                padding-left: 0;
+              }
+
+              .top-bar > .row:first-child {
+                display: none;
+              }
+
+              .page--has-toolbar {
+                padding-top: 52px;
+              }
+
+              .flex-top-bar {
+                left: 0;
+              }
+
+              .applications-list .filters-group__panel {
+                top: 72px;
+              }
+
+              @media screen and (max-width: 63.99875em) {
+                .applications-list .filters-group__panel {
+                  top: 152px;
+                }
+              }
+
+              .page-wrapper .page__top-bar {
+                display: none;
+              }
+            `;
+            document.body.append(ele);
+        }
+
+    </script>
 </body>
 
 </html>
