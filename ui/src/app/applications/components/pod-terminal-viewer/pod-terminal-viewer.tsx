@@ -33,8 +33,6 @@ export const PodTerminalViewer: React.FC<PodTerminalViewerProps> = ({selectedNod
     let connSubject_ = new ReplaySubject<ShellFrame>(100);
     let incommingMessage$_ = new Subject<ShellFrame>();
     let unsubscribe_ = new Subject<void>();
-    let connecting = false;
-    let connectionClosed = false;
     let connected = false;
 
     function showErrorMsg(msg: string, err: any) {
@@ -69,8 +67,6 @@ export const PodTerminalViewer: React.FC<PodTerminalViewerProps> = ({selectedNod
 
     const onConnectionOpen = () => {
         connected = true;
-        connecting = false;
-        connectionClosed = false;
         onTerminalResize(); // fit the screen first time
         terminal.focus();
     };
@@ -79,8 +75,6 @@ export const PodTerminalViewer: React.FC<PodTerminalViewerProps> = ({selectedNod
         if (!connected) return;
         if (webSocket) webSocket.close();
         connected = false;
-        connecting = false;
-        connectionClosed = true;
     };
 
     const handleConnectionMessage = (frame: ShellFrame) => {
@@ -145,8 +139,6 @@ export const PodTerminalViewer: React.FC<PodTerminalViewerProps> = ({selectedNod
     }
 
     function setupConnection() {
-        connecting = true;
-        connectionClosed = false;
         const {name = '', namespace = ''} = selectedNode || {};
         webSocket = new WebSocket(
             `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/terminal?pod=${name}&container=${AppUtils.getContainerName(
