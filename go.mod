@@ -96,7 +96,7 @@ require (
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
 	layeh.com/gopher-json v0.0.0-20190114024228-97fed8db8427
 	sigs.k8s.io/controller-runtime v0.11.0
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -249,6 +249,9 @@ require (
 )
 
 replace (
+	// TODO release gitops-engine and remove the line bellow
+	github.com/argoproj/gitops-engine => github.com/leoluz/gitops-engine v0.4.1-0.20220624024313-299b44e46153
+
 	// https://github.com/golang/go/issues/33546#issuecomment-519656923
 	github.com/go-check/check => github.com/go-check/check v0.0.0-20180628173108-788fd7840127
 
