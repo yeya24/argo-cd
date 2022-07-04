@@ -76,7 +76,7 @@ func NewMetricsServer() *MetricsServer {
 	registry.MustRegister(redisRequestHistogram)
 
 	return &MetricsServer{
-		handler:                  promhttp.HandlerFor(prometheus.Gatherers{registry, prometheus.DefaultGatherers}, promhttp.HandlerOpts{}),
+		handler:                  promhttp.HandlerFor(prometheus.Gatherers{registry, prometheus.DefaultGatherer}, promhttp.HandlerOpts{}),
 		gitRequestCounter:        gitRequestCounter,
 		gitRequestHistogram:      gitRequestHistogram,
 		repoPendingRequestsGauge: repoPendingRequestsGauge,
