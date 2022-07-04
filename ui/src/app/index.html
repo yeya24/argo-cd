@@ -12,49 +12,53 @@
 </head>
 
 <body>
-    <noscript>
-        <p>
-        Your browser does not support JavaScript. Please enable JavaScript to view the site. 
+<noscript>
+    <p>
+        Your browser does not support JavaScript. Please enable JavaScript to view the site.
         Alternatively, Argo CD can be used with the <a href="https://argoproj.github.io/argo-cd/cli_installation/">Argo CD CLI</a>.
-        </p>
-    </noscript>
-    <div id="app"></div>
-    <script>
-        const isIframe = window.location.search.includes('mode=iframe') || window.sessionStorage.getItem('isIframe');
-        const pathname = window.location.pathname;
-        listenParentMessage();
+    </p>
+</noscript>
+<div id="app"></div>
+<script>
+    const isIframe = window.location.search.includes('mode=iframe') || window.sessionStorage.getItem('isIframe');
+    const pathname = window.location.pathname;
+    listenParentMessage();
 
-        if (isIframe && !window.sessionStorage.getItem('isIframe')) {
-            window.sessionStorage.setItem('isIframe', 'true');
-        }
+    if (isIframe && !window.sessionStorage.getItem('isIframe')) {
+        window.sessionStorage.setItem('isIframe', 'true');
+    }
 
-        if (isIframe && (pathname === '/applications' || /\/applications\/.+/.test(pathname))) {
-            hideAppSideBars();
-        }
+    if (isIframe && (pathname === '/applications' || /\/applications\/.+/.test(pathname))) {
+        hideAppSideBars();
+    }
 
-        function listenParentMessage() {
-            const trustedOrigins = ['https://bge-dev.byted.org', 'https://bge-stg.byted.org', 'https://bge.byted.org']
-            window.onmessage = function (event) {
-                console.log('message =>', event)
-                if (event.data === 'hideSideBar') {
-                    console.log('hideAppSideBars ==>')
-                    hideAppSideBars();
-                }
+    function listenParentMessage() {
+        const trustedOrigins = ['https://bge-dev.byted.org', 'https://bge-stg.byted.org', 'https://bge.byted.org'];
+        window.onmessage = function (event) {
+            console.log('message =>', event)
+            if (event.data && event.data.message === 'relogin') {
+                window.location.href = ['auth/login?return_url=', window.location.origin, '/applications/', event.data.payload].join('');
+            }
 
-                if (event.data === 'logout' && trustedOrigins.includes(event.origin)) {
-                    fetch('auth/logout',  {
-                        method: 'GET',
-                        credentials: 'include'
-                    }).then((res) => {
-                        console.log('logout res', res)
-                        top.postMessage({message: 'argocd-logout', payload: res.status}, event.origin);
-                    })
-                }
-            };
-        }
-        function hideAppSideBars() {
-            const ele = document.createElement('style');
-            ele.innerHTML = `
+            if (event.data === 'hideSideBar') {
+                console.log('hideAppSideBars ==>')
+                hideAppSideBars();
+            }
+
+            if (event.data === 'logout' && trustedOrigins.includes(event.origin)) {
+                fetch('auth/logout',  {
+                    method: 'GET',
+                    credentials: 'include'
+                }).then((res) => {
+                    console.log('logout res', res)
+                    top.postMessage({message: 'argocd-logout', payload: res.status}, event.origin);
+                })
+            }
+        };
+    }
+    function hideAppSideBars() {
+        const ele = document.createElement('style');
+        ele.innerHTML = `
               .top-bar {
                 line-height: 40px;
               }
@@ -256,10 +260,10 @@
                 display: none;
               }
             `;
-            document.body.append(ele);
-        }
+        document.body.append(ele);
+    }
 
-    </script>
+</script>
 </body>
 
 </html>
