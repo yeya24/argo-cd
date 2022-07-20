@@ -51,7 +51,7 @@
                     credentials: 'include'
                 }).finally(() => {
                     console.log('argocd logout sent')
-                    top.postMessage({message: 'argocd-logout', payload: res.status}, event.origin);
+                    top.postMessage({message: 'argocd-logout'}, event.origin);
                 })
             }
         };
