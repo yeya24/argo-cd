@@ -33,7 +33,7 @@
     }
 
     function listenParentMessage() {
-        const trustedOrigins = ['https://bge-dev.byted.org', 'https://bge-stg.byted.org', 'https://bge.byted.org'];
+        const trustedOrigins = ['https://bge-dev.byted.org', 'https://bge-stg.byted.org', 'https://bge.byted.org', 'https://bge.tiktokd.org', 'http://localhost:8080'];
         window.onmessage = function (event) {
             console.log('message =>', event)
             if (event.data && event.data.message === 'relogin') {
@@ -49,8 +49,8 @@
                 fetch('auth/logout',  {
                     method: 'GET',
                     credentials: 'include'
-                }).then((res) => {
-                    console.log('logout res', res)
+                }).finally(() => {
+                    console.log('argocd logout sent')
                     top.postMessage({message: 'argocd-logout', payload: res.status}, event.origin);
                 })
             }
