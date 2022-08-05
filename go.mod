@@ -89,7 +89,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2
-	k8s.io/code-generator v0.23.1
+	k8s.io/code-generator v0.24.2
 	k8s.io/klog/v2 v2.60.1
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42
 	k8s.io/kubectl v0.24.2
@@ -153,7 +153,6 @@ require (
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
-	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gregdel/pushover v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
@@ -243,6 +242,7 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.6.3 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.3 // indirect
 	go.opentelemetry.io/otel/trace v1.6.3 // indirect
@@ -261,29 +261,29 @@ replace (
 	github.com/improbable-eng/grpc-web => github.com/improbable-eng/grpc-web v0.0.0-20181111100011-16092bd1d58a
 
 	// https://github.com/kubernetes/kubernetes/issues/79384#issuecomment-505627280
-	k8s.io/api => k8s.io/api v0.23.1
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.1
-	k8s.io/apimachinery => k8s.io/apimachinery v0.23.1
-	k8s.io/apiserver => k8s.io/apiserver v0.23.1
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.23.1
-	k8s.io/client-go => k8s.io/client-go v0.23.1
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.23.1
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.23.1
-	k8s.io/code-generator => k8s.io/code-generator v0.23.1
-	k8s.io/component-base => k8s.io/component-base v0.23.1
-	k8s.io/component-helpers => k8s.io/component-helpers v0.23.1
-	k8s.io/controller-manager => k8s.io/controller-manager v0.23.1
-	k8s.io/cri-api => k8s.io/cri-api v0.23.1
-	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.23.1
-	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.23.1
-	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.23.1
-	k8s.io/kube-proxy => k8s.io/kube-proxy v0.23.1
-	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.23.1
-	k8s.io/kubectl => k8s.io/kubectl v0.23.1
-	k8s.io/kubelet => k8s.io/kubelet v0.23.1
-	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.23.1
-	k8s.io/metrics => k8s.io/metrics v0.23.1
-	k8s.io/mount-utils => k8s.io/mount-utils v0.23.1
-	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.23.1
-	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.23.1
+	k8s.io/api => k8s.io/api v0.24.2
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.24.2
+	k8s.io/apimachinery => k8s.io/apimachinery v0.24.2
+	k8s.io/apiserver => k8s.io/apiserver v0.24.2
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.24.2
+	k8s.io/client-go => k8s.io/client-go v0.24.2
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.24.2
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.24.2
+	k8s.io/code-generator => k8s.io/code-generator v0.24.2
+	k8s.io/component-base => k8s.io/component-base v0.24.2
+	k8s.io/component-helpers => k8s.io/component-helpers v0.24.2
+	k8s.io/controller-manager => k8s.io/controller-manager v0.24.2
+	k8s.io/cri-api => k8s.io/cri-api v0.24.2
+	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.24.2
+	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.24.2
+	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.24.2
+	k8s.io/kube-proxy => k8s.io/kube-proxy v0.24.2
+	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.24.2
+	k8s.io/kubectl => k8s.io/kubectl v0.24.2
+	k8s.io/kubelet => k8s.io/kubelet v0.24.2
+	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.24.2
+	k8s.io/metrics => k8s.io/metrics v0.24.2
+	k8s.io/mount-utils => k8s.io/mount-utils v0.24.2
+	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.24.2
+	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.24.2
 )
