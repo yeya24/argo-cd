@@ -3,15 +3,15 @@ package config
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"os"
 
-	"github.com/ghodss/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 // UnmarshalReader is used to read manifests from stdin
-func UnmarshalReader(reader io.Reader, obj interface{}) error {
-	data, err := ioutil.ReadAll(reader)
+func UnmarshalReader(reader io.Reader, obj any) error {
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -19,7 +19,7 @@ func UnmarshalReader(reader io.Reader, obj interface{}) error {
 }
 
 // unmarshalObject tries to convert a YAML or JSON byte array into the provided type.
-func unmarshalObject(data []byte, obj interface{}) error {
+func unmarshalObject(data []byte, obj any) error {
 	// first, try unmarshaling as JSON
 	// Based on technique from Kubectl, which supports both YAML and JSON:
 	//   https://mlafeldt.github.io/blog/teaching-go-programs-to-love-json-and-yaml/
@@ -30,42 +30,36 @@ func unmarshalObject(data []byte, obj interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = json.Unmarshal(jsonData, &obj)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return json.Unmarshal(jsonData, &obj)
 }
 
 // MarshalLocalYAMLFile writes JSON or YAML to a file on disk.
 // The caller is responsible for checking error return values.
-func MarshalLocalYAMLFile(path string, obj interface{}) error {
+func MarshalLocalYAMLFile(path string, obj any) error {
 	yamlData, err := yaml.Marshal(obj)
 	if err == nil {
-		err = ioutil.WriteFile(path, yamlData, 0600)
+		err = os.WriteFile(path, yamlData, 0o600)
 	}
 	return err
 }
 
 // UnmarshalLocalFile retrieves JSON or YAML from a file on disk.
 // The caller is responsible for checking error return values.
-func UnmarshalLocalFile(path string, obj interface{}) error {
-	data, err := ioutil.ReadFile(path)
+func UnmarshalLocalFile(path string, obj any) error {
+	data, err := os.ReadFile(path)
 	if err == nil {
 		err = unmarshalObject(data, obj)
 	}
 	return err
 }
 
-func Unmarshal(data []byte, obj interface{}) error {
+func Unmarshal(data []byte, obj any) error {
 	return unmarshalObject(data, obj)
 }
 
 // UnmarshalRemoteFile retrieves JSON or YAML through a GET request.
 // The caller is responsible for checking error return values.
-func UnmarshalRemoteFile(url string, obj interface{}) error {
+func UnmarshalRemoteFile(url string, obj any) error {
 	data, err := ReadRemoteFile(url)
 	if err == nil {
 		err = unmarshalObject(data, obj)
@@ -82,7 +76,7 @@ func ReadRemoteFile(url string) ([]byte, error) {
 		defer func() {
 			_ = resp.Body.Close()
 		}()
-		data, err = ioutil.ReadAll(resp.Body)
+		data, err = io.ReadAll(resp.Body)
 	}
 	return data, err
 }

@@ -9,17 +9,19 @@ spec:
   policyTypes:
   - Ingress
   ingress:
-    - from:
-      - podSelector:
-          matchLabels:
-            app.kubernetes.io/name: argocd-server
-      - podSelector:
-          matchLabels:
-            app.kubernetes.io/name: argocd-repo-server
-      - podSelector:
-          matchLabels:
-            app.kubernetes.io/name: argocd-application-controller
-      # Redis HA server need to talk to proxy as well
-      - podSelector:
-          matchLabels:
-            app.kubernetes.io/name: argocd-redis-ha
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-repo-server
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-application-controller
+    ports:
+    - port: 6379
+      protocol: TCP
+    - port: 26379
+      protocol: TCP
+

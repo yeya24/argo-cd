@@ -75,6 +75,8 @@ spec:
       selfHeal: true
 ```
 
+Disabling self-heal does not guarantee that live cluster changes won't be reverted in multi-source applications. Even if a resource's source remains unchanged, changes in one of the sources can trigger `autosync`. To handle such cases, consider disabling `autosync`.
+
 ## Automated Sync Semantics
 
 * An automated sync will only be performed if the application is OutOfSync. Applications in a
@@ -88,3 +90,4 @@ which is controlled by `--self-heal-timeout-seconds` flag of `argocd-application
   and parameters had failed.
 
 * Rollback cannot be performed against an application with automated sync enabled.
+* The automatic sync interval is determined by [the `timeout.reconciliation` value in the `argocd-cm` ConfigMap](../faq.md#how-often-does-argo-cd-check-for-changes-to-my-git-or-helm-repository), which defaults to `180s` (3 minutes).

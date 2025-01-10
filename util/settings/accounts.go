@@ -10,9 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/retry"
 
-	"github.com/argoproj/argo-cd/v2/common"
+	"github.com/argoproj/argo-cd/v3/common"
 )
 
 const (
@@ -94,8 +95,8 @@ func (a *Account) HasCapability(capability AccountCapability) bool {
 }
 
 func (mgr *SettingsManager) saveAccount(name string, account Account) error {
-	return mgr.updateSecret(func(secret *v1.Secret) error {
-		return mgr.updateConfigMap(func(cm *v1.ConfigMap) error {
+	return mgr.updateSecret(func(secret *corev1.Secret) error {
+		return mgr.updateConfigMap(func(cm *corev1.ConfigMap) error {
 			return saveAccount(secret, cm, name, account)
 		})
 	})
@@ -105,7 +106,7 @@ func (mgr *SettingsManager) saveAccount(name string, account Account) error {
 func (mgr *SettingsManager) AddAccount(name string, account Account) error {
 	accounts, err := mgr.GetAccounts()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting accounts: %w", err)
 	}
 	if _, ok := accounts[name]; ok {
 		return status.Errorf(codes.AlreadyExists, "account '%s' already exists", name)
@@ -127,37 +128,35 @@ func (mgr *SettingsManager) GetAccount(name string) (*Account, error) {
 }
 
 // UpdateAccount runs the callback function against an account that matches to the specified name
-//and persist changes applied by the callback.
+// and persist changes applied by the callback.
 func (mgr *SettingsManager) UpdateAccount(name string, callback func(account *Account) error) error {
-	account, err := mgr.GetAccount(name)
-	if err != nil {
-		return err
-	}
-	err = callback(account)
-	if err != nil {
-		return err
-	}
-	return mgr.saveAccount(name, *account)
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		account, err := mgr.GetAccount(name)
+		if err != nil {
+			return err
+		}
+		err = callback(account)
+		if err != nil {
+			return err
+		}
+		return mgr.saveAccount(name, *account)
+	})
 }
 
 // GetAccounts returns list of configured accounts
 func (mgr *SettingsManager) GetAccounts() (map[string]Account, error) {
-	err := mgr.ensureSynced(false)
+	cm, err := mgr.getConfigMap()
 	if err != nil {
 		return nil, err
 	}
-	secret, err := mgr.secrets.Secrets(mgr.namespace).Get(common.ArgoCDSecretName)
-	if err != nil {
-		return nil, err
-	}
-	cm, err := mgr.configmaps.ConfigMaps(mgr.namespace).Get(common.ArgoCDConfigMapName)
+	secret, err := mgr.getSecret()
 	if err != nil {
 		return nil, err
 	}
 	return parseAccounts(secret, cm)
 }
 
-func updateAccountMap(cm *v1.ConfigMap, key string, val string, defVal string) {
+func updateAccountMap(cm *corev1.ConfigMap, key string, val string, defVal string) {
 	existingVal := cm.Data[key]
 	if existingVal != val {
 		if val == "" || val == defVal {
@@ -168,7 +167,7 @@ func updateAccountMap(cm *v1.ConfigMap, key string, val string, defVal string) {
 	}
 }
 
-func updateAccountSecret(secret *v1.Secret, key string, val string, defVal string) {
+func updateAccountSecret(secret *corev1.Secret, key string, val string, defVal string) {
 	existingVal := string(secret.Data[key])
 	if existingVal != val {
 		if val == "" || val == defVal {
@@ -179,7 +178,7 @@ func updateAccountSecret(secret *v1.Secret, key string, val string, defVal strin
 	}
 }
 
-func saveAccount(secret *v1.Secret, cm *v1.ConfigMap, name string, account Account) error {
+func saveAccount(secret *corev1.Secret, cm *corev1.ConfigMap, name string, account Account) error {
 	tokens, err := json.Marshal(account.Tokens)
 	if err != nil {
 		return err
@@ -199,7 +198,7 @@ func saveAccount(secret *v1.Secret, cm *v1.ConfigMap, name string, account Accou
 	return nil
 }
 
-func parseAdminAccount(secret *v1.Secret, cm *v1.ConfigMap) (*Account, error) {
+func parseAdminAccount(secret *corev1.Secret, cm *corev1.ConfigMap) (*Account, error) {
 	adminAccount := &Account{Enabled: true, Capabilities: []AccountCapability{AccountCapabilityLogin}}
 	if adminPasswordHash, ok := secret.Data[settingAdminPasswordHashKey]; ok {
 		adminAccount.PasswordHash = string(adminPasswordHash)
@@ -228,7 +227,7 @@ func parseAdminAccount(secret *v1.Secret, cm *v1.ConfigMap) (*Account, error) {
 	return adminAccount, nil
 }
 
-func parseAccounts(secret *v1.Secret, cm *v1.ConfigMap) (map[string]Account, error) {
+func parseAccounts(secret *corev1.Secret, cm *corev1.ConfigMap) (map[string]Account, error) {
 	adminAccount, err := parseAdminAccount(secret, cm)
 	if err != nil {
 		return nil, err
@@ -238,7 +237,7 @@ func parseAccounts(secret *v1.Secret, cm *v1.ConfigMap) (map[string]Account, err
 	}
 
 	for key, v := range cm.Data {
-		if !strings.HasPrefix(key, fmt.Sprintf("%s.", accountsKeyPrefix)) {
+		if !strings.HasPrefix(key, accountsKeyPrefix+".") {
 			continue
 		}
 
@@ -297,11 +296,11 @@ func parseAccounts(secret *v1.Secret, cm *v1.ConfigMap) (map[string]Account, err
 			account.PasswordHash = string(passwordHash)
 		}
 		if passwordMtime, ok := secret.Data[fmt.Sprintf("%s.%s.%s", accountsKeyPrefix, name, accountPasswordMtimeSuffix)]; ok {
-			if mTime, err := time.Parse(time.RFC3339, string(passwordMtime)); err != nil {
+			mTime, err := time.Parse(time.RFC3339, string(passwordMtime))
+			if err != nil {
 				return nil, err
-			} else {
-				account.PasswordMtime = &mTime
 			}
+			account.PasswordMtime = &mTime
 		}
 		if tokensStr, ok := secret.Data[fmt.Sprintf("%s.%s.%s", accountsKeyPrefix, name, accountTokensSuffix)]; ok {
 			account.Tokens = make([]Token, 0)

@@ -26,22 +26,15 @@ func CheckError(err error) {
 	}
 }
 
-// CheckErrorWithCode is a convenience function to exit if an error is non-nil and exit if it was
-func CheckErrorWithCode(err error, exitcode int) {
-	if err != nil {
-		Fatal(exitcode, err)
-	}
-}
-
 // FailOnErr panics if there is an error. It returns the first value so you can use it if you cast it:
 // text := FailOrErr(Foo)).(string)
-func FailOnErr(v interface{}, err error) interface{} {
+func FailOnErr(v any, err error) any {
 	CheckError(err)
 	return v
 }
 
 // Fatal is a wrapper for logrus.Fatal() to exit with custom code
-func Fatal(exitcode int, args ...interface{}) {
+func Fatal(exitcode int, args ...any) {
 	exitfunc := func() {
 		os.Exit(exitcode)
 	}
@@ -50,7 +43,7 @@ func Fatal(exitcode int, args ...interface{}) {
 }
 
 // Fatalf is a wrapper for logrus.Fatalf() to exit with custom code
-func Fatalf(exitcode int, format string, args ...interface{}) {
+func Fatalf(exitcode int, format string, args ...any) {
 	exitfunc := func() {
 		os.Exit(exitcode)
 	}

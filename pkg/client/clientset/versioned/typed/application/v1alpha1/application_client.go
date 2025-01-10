@@ -5,8 +5,8 @@ package v1alpha1
 import (
 	"net/http"
 
-	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v3/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -14,6 +14,7 @@ type ArgoprojV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AppProjectsGetter
 	ApplicationsGetter
+	ApplicationSetsGetter
 }
 
 // ArgoprojV1alpha1Client is used to interact with features provided by the argoproj.io group.
@@ -27,6 +28,10 @@ func (c *ArgoprojV1alpha1Client) AppProjects(namespace string) AppProjectInterfa
 
 func (c *ArgoprojV1alpha1Client) Applications(namespace string) ApplicationInterface {
 	return newApplications(c, namespace)
+}
+
+func (c *ArgoprojV1alpha1Client) ApplicationSets(namespace string) ApplicationSetInterface {
+	return newApplicationSets(c, namespace)
 }
 
 // NewForConfig creates a new ArgoprojV1alpha1Client for the given config.

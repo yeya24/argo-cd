@@ -3,8 +3,8 @@ package diff
 import (
 	"fmt"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/argoproj/argo-cd/v2/util/glob"
+	"github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v3/util/glob"
 )
 
 // IgnoreDiffConfig holds the ignore difference configurations defined in argo-cm
@@ -17,9 +17,9 @@ type IgnoreDiffConfig struct {
 // IgnoreDifference holds the configurations to be used while ignoring differences
 // from live and desired states.
 type IgnoreDifference struct {
-	//JSONPointers is a JSON path list following the format defined in RFC4627 (https://datatracker.ietf.org/doc/html/rfc6902#section-3)
+	// JSONPointers is a JSON path list following the format defined in RFC4627 (https://datatracker.ietf.org/doc/html/rfc6902#section-3)
 	JSONPointers []string
-	//JQPathExpressions is a JQ path list that will be evaludated during the diff process
+	// JQPathExpressions is a JQ path list that will be evaludated during the diff process
 	JQPathExpressions []string
 	// ManagedFieldsManagers is a list of trusted managers. Fields mutated by those managers will take precedence over the
 	// desired state defined in the SCM and won't be displayed in diffs
@@ -40,30 +40,33 @@ func NewIgnoreDiffConfig(ignores []v1alpha1.ResourceIgnoreDifferences, overrides
 // will be returned taking precedence over Application specific ignore difference
 // configurations.
 func (i *IgnoreDiffConfig) HasIgnoreDifference(group, kind, name, namespace string) (bool, *IgnoreDifference) {
+	result := &IgnoreDifference{}
+	found := false
 	ro, ok := i.overrides[fmt.Sprintf("%s/%s", group, kind)]
 	if ok {
-		return ok, overrideToIgnoreDifference(ro)
+		mergeIgnoreDifferences(overrideToIgnoreDifference(ro), result)
+		found = true
 	}
 	wildOverride, ok := i.overrides["*/*"]
 	if ok {
-		return ok, overrideToIgnoreDifference(wildOverride)
+		mergeIgnoreDifferences(overrideToIgnoreDifference(wildOverride), result)
+		found = true
 	}
 
-	ignoresFound := []v1alpha1.ResourceIgnoreDifferences{}
 	for _, ignore := range i.ignores {
 		if glob.Match(ignore.Group, group) &&
 			glob.Match(ignore.Kind, kind) &&
 			(ignore.Name == "" || ignore.Name == name) &&
 			(ignore.Namespace == "" || ignore.Namespace == namespace) {
-
-			ignoresFound = append(ignoresFound, ignore)
-
+			mergeIgnoreDifferences(resourceToIgnoreDifference(ignore), result)
+			found = true
 		}
 	}
-	if len(ignoresFound) == 0 {
-		return false, nil
+	if !found {
+		return found, nil
 	}
-	return true, mergeIgnoreDifferences(ignoresFound)
+
+	return found, result
 }
 
 func overrideToIgnoreDifference(override v1alpha1.ResourceOverride) *IgnoreDifference {
@@ -74,14 +77,39 @@ func overrideToIgnoreDifference(override v1alpha1.ResourceOverride) *IgnoreDiffe
 	}
 }
 
-// mergeIgnoreDifferences will merge all ignore differences configurations found for
-// a specific resource.
-func mergeIgnoreDifferences(ignores []v1alpha1.ResourceIgnoreDifferences) *IgnoreDifference {
-	result := &IgnoreDifference{}
-	for _, ignore := range ignores {
-		result.JQPathExpressions = append(result.JQPathExpressions, ignore.JQPathExpressions...)
-		result.JSONPointers = append(result.JSONPointers, ignore.JSONPointers...)
-		result.ManagedFieldsManagers = append(result.ManagedFieldsManagers, ignore.ManagedFieldsManagers...)
+func resourceToIgnoreDifference(resource v1alpha1.ResourceIgnoreDifferences) *IgnoreDifference {
+	return &IgnoreDifference{
+		JSONPointers:          resource.JSONPointers,
+		JQPathExpressions:     resource.JQPathExpressions,
+		ManagedFieldsManagers: resource.ManagedFieldsManagers,
 	}
-	return result
+}
+
+// mergeIgnoreDifferences will merge all ignores in the given from in target
+// skipping repeated configs.
+func mergeIgnoreDifferences(from *IgnoreDifference, target *IgnoreDifference) {
+	for _, jqPath := range from.JQPathExpressions {
+		if !contains(target.JQPathExpressions, jqPath) {
+			target.JQPathExpressions = append(target.JQPathExpressions, jqPath)
+		}
+	}
+	for _, jsonPointer := range from.JSONPointers {
+		if !contains(target.JSONPointers, jsonPointer) {
+			target.JSONPointers = append(target.JSONPointers, jsonPointer)
+		}
+	}
+	for _, manager := range from.ManagedFieldsManagers {
+		if !contains(target.ManagedFieldsManagers, manager) {
+			target.ManagedFieldsManagers = append(target.ManagedFieldsManagers, manager)
+		}
+	}
+}
+
+func contains(slice []string, e string) bool {
+	for _, s := range slice {
+		if s == e {
+			return true
+		}
+	}
+	return false
 }

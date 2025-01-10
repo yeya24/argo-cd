@@ -16,9 +16,10 @@ import (
 	"regexp"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/argoproj/argo-cd/v2/common"
+	"github.com/argoproj/argo-cd/v3/common"
 )
 
 // A struct representing an entry in the list of SSH known hosts.
@@ -79,44 +80,39 @@ var validFQDNRegexp = regexp.MustCompile(`^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]{
 func IsValidHostname(hostname string, fqdn bool) bool {
 	if !fqdn {
 		return validHostNameRegexp.Match([]byte(hostname)) || validIPv6Regexp.Match([]byte(hostname))
-	} else {
-		return validFQDNRegexp.Match([]byte(hostname))
 	}
+	return validFQDNRegexp.Match([]byte(hostname))
 }
 
 // Get the configured path to where TLS certificates are stored on the local
 // filesystem. If ARGOCD_TLS_DATA_PATH environment is set, path is taken from
 // there, otherwise the default will be returned.
 func GetTLSCertificateDataPath() string {
-	envPath := os.Getenv(common.EnvVarTLSDataPath)
-	if envPath != "" {
+	if envPath := os.Getenv(common.EnvVarTLSDataPath); envPath != "" {
 		return envPath
-	} else {
-		return common.DefaultPathTLSConfig
 	}
+	return common.DefaultPathTLSConfig
 }
 
 // Get the configured path to where SSH certificates are stored on the local
 // filesystem. If ARGOCD_SSH_DATA_PATH environment is set, path is taken from
 // there, otherwise the default will be returned.
 func GetSSHKnownHostsDataPath() string {
-	envPath := os.Getenv(common.EnvVarSSHDataPath)
-	if envPath != "" {
-		return envPath + "/" + common.DefaultSSHKnownHostsName
-	} else {
-		return common.DefaultPathSSHConfig + "/" + common.DefaultSSHKnownHostsName
+	if envPath := os.Getenv(common.EnvVarSSHDataPath); envPath != "" {
+		return filepath.Join(envPath, common.DefaultSSHKnownHostsName)
 	}
+	return filepath.Join(common.DefaultPathSSHConfig, common.DefaultSSHKnownHostsName)
 }
 
 // Decode a certificate in PEM format to X509 data structure
 func DecodePEMCertificateToX509(pemData string) (*x509.Certificate, error) {
 	decodedData, _ := pem.Decode([]byte(pemData))
 	if decodedData == nil {
-		return nil, errors.New("Could not decode PEM data from input.")
+		return nil, errors.New("could not decode PEM data from input")
 	}
 	x509Cert, err := x509.ParseCertificate(decodedData.Bytes)
 	if err != nil {
-		return nil, errors.New("Could not parse X509 data from input.")
+		return nil, errors.New("could not parse X509 data from input")
 	}
 	return x509Cert, nil
 }
@@ -132,7 +128,14 @@ func ParseTLSCertificatesFromPath(sourceFile string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer fileHandle.Close()
+	defer func() {
+		if err = fileHandle.Close(); err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: common.SecurityCWEMissingReleaseOfFileDescriptor,
+			}).Errorf("error closing file %q: %v", fileHandle.Name(), err)
+		}
+	}()
 	return ParseTLSCertificatesFromStream(fileHandle)
 }
 
@@ -153,7 +156,7 @@ func ParseTLSCertificatesFromStream(stream io.Reader) ([]string, error) {
 	// TODO: Implement error heuristics
 
 	for scanner.Scan() {
-		curLine += 1
+		curLine++
 		if !inCertData {
 			if strings.HasPrefix(scanner.Text(), CertificateBeginMarker) {
 				certLine = 1
@@ -161,7 +164,7 @@ func ParseTLSCertificatesFromStream(stream io.Reader) ([]string, error) {
 				pemData += scanner.Text() + "\n"
 			}
 		} else {
-			certLine += 1
+			certLine++
 			pemData += scanner.Text() + "\n"
 			if strings.HasPrefix(scanner.Text(), CertificateEndMarker) {
 				inCertData = false
@@ -171,7 +174,7 @@ func ParseTLSCertificatesFromStream(stream io.Reader) ([]string, error) {
 		}
 
 		if certLine > CertificateMaxLines {
-			return nil, errors.New("Maximum number of lines exceeded during certificate parsing.")
+			return nil, errors.New("maximum number of lines exceeded during certificate parsing")
 		}
 	}
 
@@ -189,7 +192,14 @@ func ParseSSHKnownHostsFromPath(sourceFile string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer fileHandle.Close()
+	defer func() {
+		if err = fileHandle.Close(); err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: common.SecurityCWEMissingReleaseOfFileDescriptor,
+			}).Errorf("error closing file %q: %v", fileHandle.Name(), err)
+		}
+	}()
 	return ParseSSHKnownHostsFromStream(fileHandle)
 }
 
@@ -202,10 +212,10 @@ func ParseSSHKnownHostsFromStream(stream io.Reader) ([]string, error) {
 	numEntries := 0
 
 	for scanner.Scan() {
-		curLine += 1
+		curLine++
 		lineData := scanner.Text()
 		if IsValidSSHKnownHostsEntry(lineData) {
-			numEntries += 1
+			numEntries++
 			knownHostsLists = append(knownHostsLists, lineData)
 		}
 	}
@@ -233,7 +243,7 @@ func IsValidSSHKnownHostsEntry(line string) bool {
 func TokenizeSSHKnownHostsEntry(knownHostsEntry string) (string, string, []byte, error) {
 	knownHostsToken := strings.SplitN(knownHostsEntry, " ", 3)
 	if len(knownHostsToken) != 3 {
-		return "", "", nil, fmt.Errorf("Error while tokenizing input data.")
+		return "", "", nil, errors.New("error while tokenizing input data")
 	}
 	return knownHostsToken[0], knownHostsToken[1], []byte(knownHostsToken[2]), nil
 }
@@ -258,8 +268,8 @@ func TokenizedDataToPublicKey(hostname string, subType string, rawKeyData string
 
 // Returns the requested pattern with all possible square brackets escaped
 func nonBracketedPattern(pattern string) string {
-	ret := strings.Replace(pattern, "[", `\[`, -1)
-	return strings.Replace(ret, "]", `\]`, -1)
+	ret := strings.ReplaceAll(pattern, "[", `\[`)
+	return strings.ReplaceAll(ret, "]", `\]`)
 }
 
 // We do not use full fledged regular expression for matching the hostname.
@@ -301,18 +311,24 @@ func ServerNameWithoutPort(serverName string) string {
 // Load certificate data from a file. If the file does not exist, we do not
 // consider it an error and just return empty data.
 func GetCertificateForConnect(serverName string) ([]string, error) {
-	certPath := fmt.Sprintf("%s/%s", GetTLSCertificateDataPath(), ServerNameWithoutPort(serverName))
+	dataPath := GetTLSCertificateDataPath()
+	certPath, err := filepath.Abs(filepath.Join(dataPath, ServerNameWithoutPort(serverName)))
+	if err != nil {
+		return nil, err
+	}
+	if !strings.HasPrefix(certPath, dataPath) {
+		return nil, fmt.Errorf("could not get certificate for host %s", serverName)
+	}
 	certificates, err := ParseTLSCertificatesFromPath(certPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	if len(certificates) == 0 {
-		return nil, fmt.Errorf("No certificates found in existing file.")
+		return nil, errors.New("no certificates found in existing file")
 	}
 
 	return certificates, nil
@@ -322,7 +338,7 @@ func GetCertificateForConnect(serverName string) ([]string, error) {
 // mount. This function makes sure that the path returned actually contain
 // at least one valid certificate, and no invalid data.
 func GetCertBundlePathForRepository(serverName string) (string, error) {
-	certPath := fmt.Sprintf("%s/%s", GetTLSCertificateDataPath(), ServerNameWithoutPort(serverName))
+	certPath := filepath.Join(GetTLSCertificateDataPath(), ServerNameWithoutPort(serverName))
 	certs, err := GetCertificateForConnect(serverName)
 	if err != nil {
 		return "", nil

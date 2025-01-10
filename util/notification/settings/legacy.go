@@ -11,9 +11,9 @@ import (
 	"github.com/argoproj/notifications-engine/pkg/triggers"
 	"github.com/argoproj/notifications-engine/pkg/util/text"
 	jsonpatch "github.com/evanphx/json-patch"
-	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/yaml"
 )
 
 type legacyTemplate struct {
@@ -51,14 +51,14 @@ type legacyServicesConfig struct {
 	Webhook  []legacyWebhookOptions    `json:"webhook"`
 }
 
-func mergePatch(orig interface{}, other interface{}) error {
+func mergePatch(orig any, other any) error {
 	origData, err := json.Marshal(orig)
 	if err != nil {
-		return err
+		return fmt.Errorf("error marshaling json for original: %w", err)
 	}
 	otherData, err := json.Marshal(other)
 	if err != nil {
-		return err
+		return fmt.Errorf("error marshaling json for patch: %w", err)
 	}
 
 	if string(otherData) == "null" {
@@ -67,17 +67,17 @@ func mergePatch(orig interface{}, other interface{}) error {
 
 	mergedData, err := jsonpatch.MergePatch(origData, otherData)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating merge patch: %w", err)
 	}
 	return json.Unmarshal(mergedData, orig)
 }
 
 func (legacy legacyConfig) merge(cfg *api.Config, context map[string]string) error {
 	if err := mergePatch(&context, &legacy.Context); err != nil {
-		return err
+		return fmt.Errorf("error in merge: %w", err)
 	}
 	if err := mergePatch(&cfg.Subscriptions, &legacy.Subscriptions); err != nil {
-		return err
+		return fmt.Errorf("error in merge config and legacy subscriptions: %w", err)
 	}
 
 	for _, template := range legacy.Templates {
@@ -150,20 +150,20 @@ func (c *legacyServicesConfig) merge(cfg *api.Config) {
 	}
 	for i := range c.Webhook {
 		opts := c.Webhook[i]
-		cfg.Services[fmt.Sprintf(opts.Name)] = func() (services.NotificationService, error) {
+		cfg.Services[opts.Name] = func() (services.NotificationService, error) {
 			return services.NewWebhookService(opts.WebhookOptions), nil
 		}
 	}
 }
 
 // ApplyLegacyConfig settings specified using deprecated config map and secret keys
-func ApplyLegacyConfig(cfg *api.Config, context map[string]string, cm *v1.ConfigMap, secret *v1.Secret) error {
+func ApplyLegacyConfig(cfg *api.Config, context map[string]string, cm *corev1.ConfigMap, secret *corev1.Secret) error {
 	if notifiersData, ok := secret.Data["notifiers.yaml"]; ok && len(notifiersData) > 0 {
 		log.Warn("Key 'notifiers.yaml' in Secret is deprecated, please migrate to new settings")
 		legacyServices := &legacyServicesConfig{}
 		err := yaml.Unmarshal(notifiersData, legacyServices)
 		if err != nil {
-			return err
+			return fmt.Errorf("error unmarshaling legacy services config: %w", err)
 		}
 		legacyServices.merge(cfg)
 	}
@@ -173,11 +173,11 @@ func ApplyLegacyConfig(cfg *api.Config, context map[string]string, cm *v1.Config
 		legacyCfg := &legacyConfig{}
 		err := yaml.Unmarshal([]byte(configData), legacyCfg)
 		if err != nil {
-			return err
+			return fmt.Errorf("error in unmarshaling legacy config: %w", err)
 		}
 		err = legacyCfg.merge(cfg, context)
 		if err != nil {
-			return err
+			return fmt.Errorf("error in ApplyLegacyConfig merging config map: %w", err)
 		}
 	}
 	return nil

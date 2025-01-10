@@ -2,11 +2,11 @@ package repos
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
-	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
+	repositorypkg "github.com/argoproj/argo-cd/v3/pkg/apiclient/repository"
+	"github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
 )
 
 // this implements the "then" part of given/when/then
@@ -39,14 +39,14 @@ func (c *Consequences) repo() (*v1alpha1.Repository, error) {
 func (c *Consequences) get() (*v1alpha1.Repository, error) {
 	_, repoClient, _ := fixture.ArgoCDClientset.NewRepoClient()
 
-	repo, _ := repoClient.List(context.Background(), &repositorypkg.RepoQuery{})
+	repo, _ := repoClient.ListRepositories(context.Background(), &repositorypkg.RepoQuery{})
 	for i := range repo.Items {
 		if repo.Items[i].Repo == c.context.path {
 			return repo.Items[i], nil
 		}
 	}
 
-	return nil, fmt.Errorf("repo not found")
+	return nil, errors.New("repo not found")
 }
 
 func (c *Consequences) Given() *Context {

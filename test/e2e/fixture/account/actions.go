@@ -1,7 +1,8 @@
 package project
 
 import (
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
+	"github.com/argoproj/argo-cd/v3/util/errors"
 )
 
 // this implements the "when" part of given/when/then
@@ -11,6 +12,21 @@ import (
 type Actions struct {
 	context      *Context
 	ignoreErrors bool
+	lastOutput   string
+	lastError    error
+}
+
+func (a *Actions) prepareCanIGetLogsArgs() []string {
+	a.context.t.Helper()
+	return []string{
+		"account", "can-i", "get", "logs", a.context.project + "/*",
+	}
+}
+
+func (a *Actions) CanIGetLogs() *Actions {
+	a.context.t.Helper()
+	a.runCli(a.prepareCanIGetLogsArgs()...)
+	return a
 }
 
 func (a *Actions) IgnoreErrors() *Actions {
@@ -26,26 +42,36 @@ func (a *Actions) DoNotIgnoreErrors() *Actions {
 func (a *Actions) prepareSetPasswordArgs(account string) []string {
 	a.context.t.Helper()
 	return []string{
-		"account", "update-password", "--account", account, "--current-password", fixture.AdminPassword, "--new-password", fixture.DefaultTestUserPassword, "--plaintext",
+		"account", "update-password", "--account", account, "--current-password", fixture.AdminPassword, "--new-password", fixture.DefaultTestUserPassword,
 	}
 }
 
 func (a *Actions) Create() *Actions {
-	fixture.SetAccounts(map[string][]string{
+	errors.CheckError(fixture.SetAccounts(map[string][]string{
 		a.context.name: {"login"},
-	})
+	}))
 	_, _ = fixture.RunCli(a.prepareSetPasswordArgs(a.context.name)...)
 	return a
 }
 
 func (a *Actions) SetPermissions(permissions []fixture.ACL, roleName string) *Actions {
-	fixture.SetPermissions(permissions, a.context.name, roleName)
+	errors.CheckError(fixture.SetPermissions(permissions, a.context.name, roleName))
+	return a
+}
+
+func (a *Actions) SetParamInSettingConfigMap(key, value string) *Actions {
+	errors.CheckError(fixture.SetParamInSettingConfigMap(key, value))
 	return a
 }
 
 func (a *Actions) Login() *Actions {
-	fixture.LoginAs(a.context.name)
+	errors.CheckError(fixture.LoginAs(a.context.name))
 	return a
+}
+
+func (a *Actions) runCli(args ...string) {
+	a.context.t.Helper()
+	a.lastOutput, a.lastError = fixture.RunCli(args...)
 }
 
 func (a *Actions) Then() *Consequences {

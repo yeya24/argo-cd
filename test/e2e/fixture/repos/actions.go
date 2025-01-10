@@ -1,7 +1,9 @@
 package repos
 
 import (
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
+	"log"
+
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
 )
 
 // this implements the "when" part of given/when/then
@@ -81,4 +83,7 @@ func (a *Actions) Then() *Consequences {
 func (a *Actions) runCli(args ...string) {
 	a.context.t.Helper()
 	a.lastOutput, a.lastError = fixture.RunCli(args...)
+	if !a.ignoreErrors && a.lastError != nil {
+		log.Fatal(a.lastOutput)
+	}
 }
