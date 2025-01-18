@@ -2,12 +2,11 @@ package repos
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
-	"github.com/argoproj/argo-cd/v2/util/errors"
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
+	"github.com/argoproj/argo-cd/v3/util/errors"
 )
 
 var (
@@ -138,8 +137,10 @@ func AddHelmHTTPSCredentialsTLSClientCert() {
 
 // AddHelmoOCICredentialsWithoutUserPass adds credentials for Helm OIC repo to context
 func AddHelmoOCICredentialsWithoutUserPass() {
-	args := []string{"repocreds", "add", fixture.RepoURL(fixture.RepoURLTypeHelmOCI),
-		"--enable-oci", "--type", "helm"}
+	args := []string{
+		"repocreds", "add", fixture.RepoURL(fixture.RepoURLTypeHelmOCI),
+		"--enable-oci", "--type", "helm",
+	}
 	errors.FailOnErr(fixture.RunCli(args...))
 }
 
@@ -155,11 +156,11 @@ func AddSSHCredentials() {
 // PushChartToOCIRegistry adds a helm chart to helm OCI registry
 func PushChartToOCIRegistry(chartPathName, chartName, chartVersion string) {
 	// create empty temp directory to extract chart from the registry
-	tempDest, err1 := ioutil.TempDir("", "helm")
+	tempDest, err1 := os.MkdirTemp("", "helm")
 	errors.CheckError(err1)
 	defer func() { _ = os.RemoveAll(tempDest) }()
 
-	chartAbsPath, err2 := filepath.Abs(fmt.Sprintf("./testdata/%s", chartPathName))
+	chartAbsPath, err2 := filepath.Abs("./testdata/" + chartPathName)
 	errors.CheckError(err2)
 
 	_ = os.Setenv("HELM_EXPERIMENTAL_OCI", "1")
@@ -171,7 +172,6 @@ func PushChartToOCIRegistry(chartPathName, chartName, chartVersion string) {
 		"helm",
 		"push",
 		fmt.Sprintf("%s/%s-%s.tgz", tempDest, chartName, chartVersion),
-		fmt.Sprintf("oci://%s", fixture.HelmOCIRegistryURL),
+		"oci://"+fixture.HelmOCIRegistryURL,
 	))
-
 }

@@ -1,10 +1,13 @@
 package cmpserver
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
@@ -15,13 +18,15 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/argoproj/argo-cd/v2/cmpserver/apiclient"
-	"github.com/argoproj/argo-cd/v2/cmpserver/plugin"
-	"github.com/argoproj/argo-cd/v2/common"
-	versionpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/version"
-	"github.com/argoproj/argo-cd/v2/server/version"
-	"github.com/argoproj/argo-cd/v2/util/errors"
-	grpc_util "github.com/argoproj/argo-cd/v2/util/grpc"
+	"google.golang.org/grpc/keepalive"
+
+	"github.com/argoproj/argo-cd/v3/cmpserver/apiclient"
+	"github.com/argoproj/argo-cd/v3/cmpserver/plugin"
+	"github.com/argoproj/argo-cd/v3/common"
+	versionpkg "github.com/argoproj/argo-cd/v3/pkg/apiclient/version"
+	"github.com/argoproj/argo-cd/v3/server/version"
+	"github.com/argoproj/argo-cd/v3/util/errors"
+	grpc_util "github.com/argoproj/argo-cd/v3/util/grpc"
 )
 
 // ArgoCDCMPServer is the config management plugin server implementation
@@ -30,7 +35,7 @@ type ArgoCDCMPServer struct {
 	opts          []grpc.ServerOption
 	initConstants plugin.CMPServerInitConstants
 	stopCh        chan os.Signal
-	doneCh        chan interface{}
+	doneCh        chan any
 	sig           os.Signal
 }
 
@@ -41,21 +46,36 @@ func NewServer(initConstants plugin.CMPServerInitConstants) (*ArgoCDCMPServer, e
 	}
 
 	serverLog := log.NewEntry(log.StandardLogger())
-	streamInterceptors := []grpc.StreamServerInterceptor{grpc_logrus.StreamServerInterceptor(serverLog), grpc_prometheus.StreamServerInterceptor, grpc_util.PanicLoggerStreamServerInterceptor(serverLog)}
-	unaryInterceptors := []grpc.UnaryServerInterceptor{grpc_logrus.UnaryServerInterceptor(serverLog), grpc_prometheus.UnaryServerInterceptor, grpc_util.PanicLoggerUnaryServerInterceptor(serverLog)}
+	streamInterceptors := []grpc.StreamServerInterceptor{
+		otelgrpc.StreamServerInterceptor(), //nolint:staticcheck // TODO: ignore SA1019 for depreciation: see https://github.com/argoproj/argo-cd/issues/18258
+		grpc_logrus.StreamServerInterceptor(serverLog),
+		grpc_prometheus.StreamServerInterceptor,
+		grpc_util.PanicLoggerStreamServerInterceptor(serverLog),
+	}
+	unaryInterceptors := []grpc.UnaryServerInterceptor{
+		otelgrpc.UnaryServerInterceptor(), //nolint:staticcheck // TODO: ignore SA1019 for depreciation: see https://github.com/argoproj/argo-cd/issues/18258
+		grpc_logrus.UnaryServerInterceptor(serverLog),
+		grpc_prometheus.UnaryServerInterceptor,
+		grpc_util.PanicLoggerUnaryServerInterceptor(serverLog),
+	}
 
 	serverOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(streamInterceptors...)),
 		grpc.MaxRecvMsgSize(apiclient.MaxGRPCMessageSize),
 		grpc.MaxSendMsgSize(apiclient.MaxGRPCMessageSize),
+		grpc.KeepaliveEnforcementPolicy(
+			keepalive.EnforcementPolicy{
+				MinTime: common.GetGRPCKeepAliveEnforcementMinimum(),
+			},
+		),
 	}
 
 	return &ArgoCDCMPServer{
 		log:           serverLog,
 		opts:          serverOpts,
 		stopCh:        make(chan os.Signal),
-		doneCh:        make(chan interface{}),
+		doneCh:        make(chan any),
 		initConstants: initConstants,
 	}, nil
 }
@@ -72,7 +92,8 @@ func (a *ArgoCDCMPServer) Run() {
 	signal.Notify(a.stopCh, syscall.SIGINT, syscall.SIGTERM)
 	go a.Shutdown(config.Address())
 
-	grpcServer := a.CreateGRPC()
+	grpcServer, err := a.CreateGRPC()
+	errors.CheckError(err)
 	err = grpcServer.Serve(listener)
 	errors.CheckError(err)
 
@@ -82,12 +103,16 @@ func (a *ArgoCDCMPServer) Run() {
 }
 
 // CreateGRPC creates new configured grpc server
-func (a *ArgoCDCMPServer) CreateGRPC() *grpc.Server {
+func (a *ArgoCDCMPServer) CreateGRPC() (*grpc.Server, error) {
 	server := grpc.NewServer(a.opts...)
 	versionpkg.RegisterVersionServiceServer(server, version.NewServer(nil, func() (bool, error) {
 		return true, nil
 	}))
 	pluginService := plugin.NewService(a.initConstants)
+	err := pluginService.Init(common.GetCMPWorkDir())
+	if err != nil {
+		return nil, fmt.Errorf("error initializing plugin service: %w", err)
+	}
 	apiclient.RegisterConfigManagementPluginServiceServer(server, pluginService)
 
 	healthService := health.NewServer()
@@ -96,7 +121,7 @@ func (a *ArgoCDCMPServer) CreateGRPC() *grpc.Server {
 	// Register reflection service on gRPC server.
 	reflection.Register(server)
 
-	return server
+	return server, nil
 }
 
 func (a *ArgoCDCMPServer) Shutdown(address string) {

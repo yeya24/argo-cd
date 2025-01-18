@@ -1,27 +1,34 @@
 owners:
 - alexmt
+- crenshaw-dev
 - jessesuen
 
 approvers:
 - alexec
 - alexmt
+- gdsoumya
 - jannfis
 - jessesuen
 - jgwest
+- keithchong
 - mayzhang2000
 - rbreeze
+- leoluz
+- crenshaw-dev
+- pasha-codefresh
 
 reviewers:
 - dthomson25
 - tetchel
+- terrytangyuan
 - wtam2018
 - ishitasequeira
 - reginapizza
 - hblixt
 - chetan-rns
 - wanghong230
-- pasha-codefresh
 - ciiay
-- leoluz
-- crenshaw-dev
 - saumeya
+- zachaller
+- 34fathombelow
+- alexef

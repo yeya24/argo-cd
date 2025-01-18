@@ -10,15 +10,13 @@ package repocreds
 import (
 	context "context"
 	fmt "fmt"
-	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	_ "github.com/gogo/protobuf/gogoproto"
+	v1alpha1 "github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	io "io"
-	_ "k8s.io/api/core/v1"
 	math "math"
 	math_bits "math/bits"
 )
@@ -287,39 +285,43 @@ func init() {
 func init() { proto.RegisterFile("server/repocreds/repocreds.proto", fileDescriptor_b0b5fce4710a8821) }
 
 var fileDescriptor_b0b5fce4710a8821 = []byte{
-	// 503 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0xc1, 0x6a, 0x14, 0x31,
-	0x18, 0xc7, 0x49, 0xa5, 0xc5, 0x46, 0x90, 0x76, 0x2a, 0xb5, 0x3b, 0x5b, 0xd7, 0x35, 0x07, 0x29,
-	0x45, 0x13, 0x76, 0x05, 0x11, 0x8f, 0xb6, 0xe0, 0xc1, 0x5e, 0x1c, 0xf1, 0x22, 0x88, 0xa4, 0x33,
-	0x1f, 0xd3, 0xb8, 0xe3, 0x24, 0x26, 0x99, 0x91, 0x45, 0x44, 0xf0, 0x05, 0x3c, 0x78, 0x15, 0x5f,
-	0xc0, 0x07, 0xf0, 0x15, 0x3c, 0x0a, 0xbe, 0x80, 0x2c, 0x3e, 0x88, 0x24, 0xbb, 0x33, 0xb3, 0xcb,
-	0xce, 0x61, 0x0f, 0x8b, 0xb7, 0x6f, 0x92, 0xff, 0xfc, 0xf3, 0xfb, 0xf2, 0x7d, 0x5f, 0x70, 0xdf,
-	0x80, 0x2e, 0x41, 0x33, 0x0d, 0x4a, 0xc6, 0x1a, 0x12, 0xd3, 0x44, 0x54, 0x69, 0x69, 0x65, 0xb0,
-	0x5d, 0x2f, 0x84, 0xd7, 0x52, 0x99, 0x4a, 0xbf, 0xca, 0x5c, 0x34, 0x15, 0x84, 0x87, 0xa9, 0x94,
-	0x69, 0x06, 0x8c, 0x2b, 0xc1, 0x78, 0x9e, 0x4b, 0xcb, 0xad, 0x90, 0xf9, 0xec, 0xf7, 0x90, 0x8c,
-	0x1e, 0x18, 0x2a, 0xa4, 0xdf, 0x8d, 0xa5, 0x06, 0x56, 0x0e, 0x58, 0x0a, 0x39, 0x68, 0x6e, 0x21,
-	0x99, 0x69, 0xce, 0x52, 0x61, 0x2f, 0x8a, 0x73, 0x1a, 0xcb, 0x37, 0x8c, 0x6b, 0x7f, 0xc4, 0x6b,
-	0x1f, 0xdc, 0x8d, 0x13, 0x56, 0x0e, 0x99, 0x1a, 0xa5, 0xee, 0x7f, 0xc3, 0xb8, 0x52, 0x99, 0x88,
-	0xbd, 0x3f, 0x2b, 0x07, 0x3c, 0x53, 0x17, 0x7c, 0xc9, 0x8d, 0x10, 0x7c, 0x35, 0x02, 0x25, 0x4f,
-	0x1c, 0xf2, 0xd3, 0x02, 0xf4, 0x38, 0xd8, 0xc1, 0x97, 0x0a, 0x9d, 0x1d, 0xa0, 0x3e, 0x3a, 0xda,
-	0x8e, 0x5c, 0x48, 0x8e, 0xf1, 0x7e, 0xad, 0x39, 0x85, 0x0c, 0x2c, 0x44, 0xf0, 0xb6, 0x00, 0x63,
-	0x5b, 0xb4, 0x7b, 0x78, 0xb7, 0xd6, 0x46, 0x60, 0x94, 0xcc, 0x0d, 0x90, 0xcf, 0x68, 0xce, 0xe1,
-	0x44, 0x03, 0x6f, 0x1c, 0x5e, 0xe2, 0x4d, 0x7f, 0x5d, 0xde, 0xe3, 0xca, 0xf0, 0x31, 0x6d, 0xb2,
-	0xa3, 0x55, 0x76, 0x3e, 0x78, 0x15, 0x27, 0xb4, 0x1c, 0x52, 0x35, 0x4a, 0xa9, 0xcb, 0x8e, 0xce,
-	0x65, 0x47, 0xab, 0xec, 0x68, 0x73, 0xf4, 0xd4, 0x35, 0xd8, 0xc7, 0x5b, 0x85, 0x32, 0xa0, 0xed,
-	0xc1, 0x46, 0x1f, 0x1d, 0x5d, 0x8e, 0x66, 0x5f, 0xe4, 0xdd, 0x1c, 0xd0, 0x73, 0x95, 0xfc, 0x37,
-	0xa0, 0xe1, 0xd7, 0x4d, 0xbc, 0x53, 0x2f, 0x3e, 0x03, 0x5d, 0x8a, 0x18, 0x82, 0x6f, 0x08, 0x77,
-	0xce, 0x84, 0xb1, 0x6e, 0xc3, 0x08, 0x2b, 0xf5, 0xd8, 0x6d, 0x43, 0x6e, 0x05, 0xcf, 0x4c, 0xd0,
-	0xa1, 0x4d, 0x97, 0x2d, 0xd6, 0x2a, 0x7c, 0xb2, 0x26, 0x3a, 0x77, 0x38, 0xe9, 0x7c, 0xfa, 0xfd,
-	0xf7, 0xcb, 0xc6, 0x5e, 0xb0, 0xeb, 0xdb, 0xaf, 0x1c, 0x34, 0xcd, 0x1d, 0x7c, 0x47, 0xb8, 0x5b,
-	0xd5, 0xad, 0x0d, 0xf1, 0x56, 0x1b, 0xe2, 0x42, 0xa1, 0xc3, 0x75, 0x5d, 0x24, 0xe9, 0x7b, 0xcc,
-	0x90, 0x2c, 0x63, 0x3e, 0x9c, 0x15, 0xfd, 0x07, 0xc2, 0xdd, 0xaa, 0xa8, 0x2b, 0xd3, 0x2e, 0x74,
-	0xc1, 0xfa, 0x68, 0xef, 0x78, 0xda, 0xdb, 0xe1, 0x8d, 0x25, 0x5a, 0xf6, 0x7e, 0x4a, 0x50, 0xe8,
-	0xec, 0x43, 0x45, 0xfe, 0x11, 0x77, 0xab, 0x01, 0x5b, 0x19, 0x7c, 0x61, 0x22, 0xc3, 0xc3, 0x36,
-	0x49, 0x3d, 0x88, 0x37, 0x3d, 0x4d, 0xe7, 0xf8, 0x7a, 0x0b, 0x8d, 0xe3, 0x78, 0x74, 0xfa, 0x73,
-	0xd2, 0x43, 0xbf, 0x26, 0x3d, 0xf4, 0x67, 0xd2, 0x43, 0x2f, 0xee, 0xaf, 0xf6, 0xd4, 0xc4, 0x99,
-	0x80, 0xdc, 0x36, 0x5e, 0xe7, 0x5b, 0xfe, 0x6d, 0xb9, 0xf7, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x83,
-	0xa0, 0x52, 0xd7, 0x30, 0x05, 0x00, 0x00,
+	// 571 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x95, 0x41, 0x6b, 0xd4, 0x40,
+	0x14, 0xc7, 0x99, 0x8a, 0xc5, 0x8e, 0x20, 0x6d, 0x0a, 0x6d, 0x37, 0x6d, 0xb7, 0x31, 0x62, 0x29,
+	0x4b, 0x3b, 0x61, 0x77, 0xc1, 0x83, 0x47, 0x5b, 0xf0, 0x60, 0x2f, 0xae, 0x88, 0x20, 0x88, 0x4c,
+	0xb3, 0x8f, 0x74, 0x6c, 0xcc, 0x8c, 0x33, 0x93, 0x94, 0x22, 0x22, 0x78, 0xf4, 0xe2, 0xc1, 0xbb,
+	0x77, 0xf1, 0xae, 0x77, 0x4f, 0x1e, 0x85, 0x7e, 0x01, 0x59, 0xfc, 0x20, 0x32, 0x93, 0xcd, 0x66,
+	0x97, 0x66, 0x65, 0x17, 0xd6, 0x7a, 0x7b, 0x49, 0x5e, 0xde, 0xfb, 0xfd, 0xff, 0xf3, 0x66, 0x06,
+	0x7b, 0x0a, 0x64, 0x06, 0x32, 0x90, 0x20, 0x78, 0x28, 0xa1, 0xab, 0xca, 0x88, 0x08, 0xc9, 0x35,
+	0x77, 0x16, 0x06, 0x2f, 0xdc, 0x8d, 0x88, 0xf3, 0x28, 0x86, 0x80, 0x0a, 0x16, 0xd0, 0x24, 0xe1,
+	0x9a, 0x6a, 0xc6, 0x93, 0x7e, 0xa2, 0x7b, 0x18, 0x31, 0x7d, 0x9c, 0x1e, 0x91, 0x90, 0xbf, 0x0c,
+	0xa8, 0x8c, 0xb8, 0x90, 0xfc, 0x85, 0x0d, 0xf6, 0xc2, 0x6e, 0x90, 0xb5, 0x03, 0x71, 0x12, 0x99,
+	0x3f, 0x55, 0x40, 0x85, 0x88, 0x59, 0x68, 0xff, 0x0d, 0xb2, 0x26, 0x8d, 0xc5, 0x31, 0x6d, 0x06,
+	0x11, 0x24, 0x20, 0xa9, 0x86, 0x6e, 0x5e, 0xcd, 0xf7, 0xf1, 0x8d, 0x0e, 0x08, 0xbe, 0x6f, 0x1a,
+	0x3f, 0x4c, 0x41, 0x9e, 0x39, 0x8b, 0xf8, 0x4a, 0x2a, 0xe3, 0x35, 0xe4, 0xa1, 0x9d, 0x85, 0x8e,
+	0x09, 0xfd, 0x06, 0x5e, 0x19, 0xe4, 0x1c, 0x40, 0x0c, 0x1a, 0x3a, 0xf0, 0x2a, 0x05, 0xa5, 0x2b,
+	0x72, 0x97, 0xf1, 0xd2, 0x20, 0xb7, 0x03, 0x4a, 0xf0, 0x44, 0x81, 0xff, 0x01, 0x0d, 0x55, 0xd8,
+	0x97, 0x40, 0xcb, 0x0a, 0xcf, 0xf0, 0x55, 0x2b, 0xda, 0xd6, 0xb8, 0xde, 0xba, 0x4f, 0x4a, 0x75,
+	0xa4, 0x50, 0x67, 0x83, 0xe7, 0x61, 0x97, 0x64, 0x6d, 0x22, 0x4e, 0x22, 0x62, 0xd4, 0x91, 0x21,
+	0x75, 0xa4, 0x50, 0x47, 0xca, 0xd6, 0x79, 0x55, 0x67, 0x05, 0xcf, 0xa7, 0x42, 0x81, 0xd4, 0x6b,
+	0x73, 0x1e, 0xda, 0xb9, 0xd6, 0xe9, 0x3f, 0xf9, 0xa7, 0x43, 0x40, 0x8f, 0x45, 0xf7, 0xd2, 0x80,
+	0x5a, 0xe7, 0x18, 0x2f, 0x0e, 0x5e, 0x3e, 0x02, 0x99, 0xb1, 0x10, 0x9c, 0x4f, 0x08, 0xd7, 0x0e,
+	0x99, 0xd2, 0xe6, 0x83, 0x62, 0x9a, 0xcb, 0x33, 0xf3, 0x19, 0x12, 0xcd, 0x68, 0xac, 0x9c, 0x1a,
+	0x29, 0x67, 0x65, 0x74, 0xad, 0xdc, 0x07, 0x33, 0xa2, 0x33, 0xcd, 0xfd, 0xda, 0xbb, 0xf3, 0xdf,
+	0x1f, 0xe7, 0x96, 0x9d, 0x25, 0x3b, 0x78, 0x59, 0xb3, 0x1c, 0x51, 0xe7, 0x33, 0xc2, 0x75, 0x93,
+	0xf3, 0x44, 0x32, 0xe3, 0xd4, 0xff, 0xa4, 0xdc, 0xb2, 0x94, 0x35, 0x67, 0xb5, 0xa0, 0x3c, 0x35,
+	0x4c, 0x7b, 0x25, 0xeb, 0x17, 0x84, 0xd7, 0x8b, 0x19, 0xab, 0x02, 0xbd, 0x59, 0x05, 0x3a, 0x32,
+	0x94, 0xee, 0xac, 0x16, 0xdd, 0xf7, 0x2c, 0xac, 0xeb, 0x5f, 0xb4, 0xf4, 0x6e, 0x7f, 0x40, 0xbf,
+	0x22, 0xec, 0xe5, 0xcd, 0xff, 0xe2, 0xed, 0x65, 0x22, 0x6f, 0x5b, 0x64, 0xcf, 0x1f, 0xe7, 0x6f,
+	0x01, 0xfe, 0x0d, 0xe1, 0xf5, 0x62, 0xe7, 0x4c, 0xcc, 0x3c, 0xb2, 0xd5, 0x66, 0xc7, 0xbc, 0x6b,
+	0x99, 0xb7, 0xdd, 0xcd, 0x0b, 0x36, 0x07, 0xaf, 0x73, 0x82, 0x54, 0xc6, 0x6f, 0x0a, 0xf2, 0xef,
+	0x08, 0x7b, 0x39, 0xc8, 0xb4, 0x96, 0xff, 0x23, 0xfc, 0x96, 0xc5, 0xdf, 0x75, 0x6f, 0x8d, 0xb1,
+	0xbc, 0x4a, 0xc4, 0x5b, 0xbc, 0x5e, 0x1c, 0xc5, 0x13, 0xe3, 0x8f, 0x9c, 0xdd, 0xee, 0x46, 0x55,
+	0xca, 0xe0, 0xc8, 0xee, 0x6f, 0xb3, 0xc6, 0x6a, 0x85, 0xa5, 0x86, 0xc3, 0x79, 0x8f, 0xb0, 0x97,
+	0x17, 0x9c, 0xd6, 0xc5, 0x69, 0x30, 0x6e, 0x5b, 0x8c, 0xad, 0xc6, 0xe6, 0x58, 0x6b, 0x0c, 0xcc,
+	0xbd, 0x83, 0x1f, 0xbd, 0x3a, 0xfa, 0xd9, 0xab, 0xa3, 0x5f, 0xbd, 0x3a, 0x7a, 0x7a, 0x67, 0xb2,
+	0x1b, 0x32, 0x8c, 0x19, 0x24, 0xba, 0x14, 0x76, 0x34, 0x6f, 0xaf, 0xc4, 0xf6, 0x9f, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x25, 0xb3, 0xca, 0x8a, 0xad, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -336,12 +338,20 @@ const _ = grpc.SupportPackageIsVersion4
 type RepoCredsServiceClient interface {
 	// ListRepositoryCredentials gets a list of all configured repository credential sets
 	ListRepositoryCredentials(ctx context.Context, in *RepoCredsQuery, opts ...grpc.CallOption) (*v1alpha1.RepoCredsList, error)
+	//ListWriteRepositoryCredentials gets a list of all configured repository credential sets that have write access
+	ListWriteRepositoryCredentials(ctx context.Context, in *RepoCredsQuery, opts ...grpc.CallOption) (*v1alpha1.RepoCredsList, error)
 	// CreateRepositoryCredentials creates a new repository credential set
 	CreateRepositoryCredentials(ctx context.Context, in *RepoCredsCreateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error)
+	// CreateWriteRepositoryCredentials creates a new repository credential set with write access
+	CreateWriteRepositoryCredentials(ctx context.Context, in *RepoCredsCreateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error)
 	// UpdateRepositoryCredentials updates a repository credential set
 	UpdateRepositoryCredentials(ctx context.Context, in *RepoCredsUpdateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error)
+	// UpdateWriteRepositoryCredentials updates a repository credential set with write access
+	UpdateWriteRepositoryCredentials(ctx context.Context, in *RepoCredsUpdateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error)
 	// DeleteRepositoryCredentials deletes a repository credential set from the configuration
 	DeleteRepositoryCredentials(ctx context.Context, in *RepoCredsDeleteRequest, opts ...grpc.CallOption) (*RepoCredsResponse, error)
+	// DeleteWriteRepositoryCredentials deletes a repository credential set with write access from the configuration
+	DeleteWriteRepositoryCredentials(ctx context.Context, in *RepoCredsDeleteRequest, opts ...grpc.CallOption) (*RepoCredsResponse, error)
 }
 
 type repoCredsServiceClient struct {
@@ -361,9 +371,27 @@ func (c *repoCredsServiceClient) ListRepositoryCredentials(ctx context.Context, 
 	return out, nil
 }
 
+func (c *repoCredsServiceClient) ListWriteRepositoryCredentials(ctx context.Context, in *RepoCredsQuery, opts ...grpc.CallOption) (*v1alpha1.RepoCredsList, error) {
+	out := new(v1alpha1.RepoCredsList)
+	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/ListWriteRepositoryCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *repoCredsServiceClient) CreateRepositoryCredentials(ctx context.Context, in *RepoCredsCreateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error) {
 	out := new(v1alpha1.RepoCreds)
 	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/CreateRepositoryCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *repoCredsServiceClient) CreateWriteRepositoryCredentials(ctx context.Context, in *RepoCredsCreateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error) {
+	out := new(v1alpha1.RepoCreds)
+	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/CreateWriteRepositoryCredentials", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -379,9 +407,27 @@ func (c *repoCredsServiceClient) UpdateRepositoryCredentials(ctx context.Context
 	return out, nil
 }
 
+func (c *repoCredsServiceClient) UpdateWriteRepositoryCredentials(ctx context.Context, in *RepoCredsUpdateRequest, opts ...grpc.CallOption) (*v1alpha1.RepoCreds, error) {
+	out := new(v1alpha1.RepoCreds)
+	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/UpdateWriteRepositoryCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *repoCredsServiceClient) DeleteRepositoryCredentials(ctx context.Context, in *RepoCredsDeleteRequest, opts ...grpc.CallOption) (*RepoCredsResponse, error) {
 	out := new(RepoCredsResponse)
 	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/DeleteRepositoryCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *repoCredsServiceClient) DeleteWriteRepositoryCredentials(ctx context.Context, in *RepoCredsDeleteRequest, opts ...grpc.CallOption) (*RepoCredsResponse, error) {
+	out := new(RepoCredsResponse)
+	err := c.cc.Invoke(ctx, "/repocreds.RepoCredsService/DeleteWriteRepositoryCredentials", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -392,12 +438,20 @@ func (c *repoCredsServiceClient) DeleteRepositoryCredentials(ctx context.Context
 type RepoCredsServiceServer interface {
 	// ListRepositoryCredentials gets a list of all configured repository credential sets
 	ListRepositoryCredentials(context.Context, *RepoCredsQuery) (*v1alpha1.RepoCredsList, error)
+	//ListWriteRepositoryCredentials gets a list of all configured repository credential sets that have write access
+	ListWriteRepositoryCredentials(context.Context, *RepoCredsQuery) (*v1alpha1.RepoCredsList, error)
 	// CreateRepositoryCredentials creates a new repository credential set
 	CreateRepositoryCredentials(context.Context, *RepoCredsCreateRequest) (*v1alpha1.RepoCreds, error)
+	// CreateWriteRepositoryCredentials creates a new repository credential set with write access
+	CreateWriteRepositoryCredentials(context.Context, *RepoCredsCreateRequest) (*v1alpha1.RepoCreds, error)
 	// UpdateRepositoryCredentials updates a repository credential set
 	UpdateRepositoryCredentials(context.Context, *RepoCredsUpdateRequest) (*v1alpha1.RepoCreds, error)
+	// UpdateWriteRepositoryCredentials updates a repository credential set with write access
+	UpdateWriteRepositoryCredentials(context.Context, *RepoCredsUpdateRequest) (*v1alpha1.RepoCreds, error)
 	// DeleteRepositoryCredentials deletes a repository credential set from the configuration
 	DeleteRepositoryCredentials(context.Context, *RepoCredsDeleteRequest) (*RepoCredsResponse, error)
+	// DeleteWriteRepositoryCredentials deletes a repository credential set with write access from the configuration
+	DeleteWriteRepositoryCredentials(context.Context, *RepoCredsDeleteRequest) (*RepoCredsResponse, error)
 }
 
 // UnimplementedRepoCredsServiceServer can be embedded to have forward compatible implementations.
@@ -407,14 +461,26 @@ type UnimplementedRepoCredsServiceServer struct {
 func (*UnimplementedRepoCredsServiceServer) ListRepositoryCredentials(ctx context.Context, req *RepoCredsQuery) (*v1alpha1.RepoCredsList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRepositoryCredentials not implemented")
 }
+func (*UnimplementedRepoCredsServiceServer) ListWriteRepositoryCredentials(ctx context.Context, req *RepoCredsQuery) (*v1alpha1.RepoCredsList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListWriteRepositoryCredentials not implemented")
+}
 func (*UnimplementedRepoCredsServiceServer) CreateRepositoryCredentials(ctx context.Context, req *RepoCredsCreateRequest) (*v1alpha1.RepoCreds, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRepositoryCredentials not implemented")
+}
+func (*UnimplementedRepoCredsServiceServer) CreateWriteRepositoryCredentials(ctx context.Context, req *RepoCredsCreateRequest) (*v1alpha1.RepoCreds, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateWriteRepositoryCredentials not implemented")
 }
 func (*UnimplementedRepoCredsServiceServer) UpdateRepositoryCredentials(ctx context.Context, req *RepoCredsUpdateRequest) (*v1alpha1.RepoCreds, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRepositoryCredentials not implemented")
 }
+func (*UnimplementedRepoCredsServiceServer) UpdateWriteRepositoryCredentials(ctx context.Context, req *RepoCredsUpdateRequest) (*v1alpha1.RepoCreds, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateWriteRepositoryCredentials not implemented")
+}
 func (*UnimplementedRepoCredsServiceServer) DeleteRepositoryCredentials(ctx context.Context, req *RepoCredsDeleteRequest) (*RepoCredsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRepositoryCredentials not implemented")
+}
+func (*UnimplementedRepoCredsServiceServer) DeleteWriteRepositoryCredentials(ctx context.Context, req *RepoCredsDeleteRequest) (*RepoCredsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteWriteRepositoryCredentials not implemented")
 }
 
 func RegisterRepoCredsServiceServer(s *grpc.Server, srv RepoCredsServiceServer) {
@@ -439,6 +505,24 @@ func _RepoCredsService_ListRepositoryCredentials_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepoCredsService_ListWriteRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCredsQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepoCredsServiceServer).ListWriteRepositoryCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/repocreds.RepoCredsService/ListWriteRepositoryCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepoCredsServiceServer).ListWriteRepositoryCredentials(ctx, req.(*RepoCredsQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RepoCredsService_CreateRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RepoCredsCreateRequest)
 	if err := dec(in); err != nil {
@@ -453,6 +537,24 @@ func _RepoCredsService_CreateRepositoryCredentials_Handler(srv interface{}, ctx 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RepoCredsServiceServer).CreateRepositoryCredentials(ctx, req.(*RepoCredsCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RepoCredsService_CreateWriteRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCredsCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepoCredsServiceServer).CreateWriteRepositoryCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/repocreds.RepoCredsService/CreateWriteRepositoryCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepoCredsServiceServer).CreateWriteRepositoryCredentials(ctx, req.(*RepoCredsCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -475,6 +577,24 @@ func _RepoCredsService_UpdateRepositoryCredentials_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepoCredsService_UpdateWriteRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCredsUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepoCredsServiceServer).UpdateWriteRepositoryCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/repocreds.RepoCredsService/UpdateWriteRepositoryCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepoCredsServiceServer).UpdateWriteRepositoryCredentials(ctx, req.(*RepoCredsUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RepoCredsService_DeleteRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RepoCredsDeleteRequest)
 	if err := dec(in); err != nil {
@@ -493,6 +613,24 @@ func _RepoCredsService_DeleteRepositoryCredentials_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepoCredsService_DeleteWriteRepositoryCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCredsDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepoCredsServiceServer).DeleteWriteRepositoryCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/repocreds.RepoCredsService/DeleteWriteRepositoryCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepoCredsServiceServer).DeleteWriteRepositoryCredentials(ctx, req.(*RepoCredsDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RepoCredsService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "repocreds.RepoCredsService",
 	HandlerType: (*RepoCredsServiceServer)(nil),
@@ -502,16 +640,32 @@ var _RepoCredsService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _RepoCredsService_ListRepositoryCredentials_Handler,
 		},
 		{
+			MethodName: "ListWriteRepositoryCredentials",
+			Handler:    _RepoCredsService_ListWriteRepositoryCredentials_Handler,
+		},
+		{
 			MethodName: "CreateRepositoryCredentials",
 			Handler:    _RepoCredsService_CreateRepositoryCredentials_Handler,
+		},
+		{
+			MethodName: "CreateWriteRepositoryCredentials",
+			Handler:    _RepoCredsService_CreateWriteRepositoryCredentials_Handler,
 		},
 		{
 			MethodName: "UpdateRepositoryCredentials",
 			Handler:    _RepoCredsService_UpdateRepositoryCredentials_Handler,
 		},
 		{
+			MethodName: "UpdateWriteRepositoryCredentials",
+			Handler:    _RepoCredsService_UpdateWriteRepositoryCredentials_Handler,
+		},
+		{
 			MethodName: "DeleteRepositoryCredentials",
 			Handler:    _RepoCredsService_DeleteRepositoryCredentials_Handler,
+		},
+		{
+			MethodName: "DeleteWriteRepositoryCredentials",
+			Handler:    _RepoCredsService_DeleteWriteRepositoryCredentials_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

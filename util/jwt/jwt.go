@@ -2,12 +2,11 @@ package jwt
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	jwtgo "github.com/golang-jwt/jwt/v4"
+	jwtgo "github.com/golang-jwt/jwt/v5"
 )
 
 // MapClaims converts a jwt.Claims to a MapClaims
@@ -57,7 +56,7 @@ func GetScopeValues(claims jwtgo.MapClaims, scopes []string) []string {
 		}
 
 		switch val := scopeIf.(type) {
-		case []interface{}:
+		case []any:
 			for _, groupIf := range val {
 				group, ok := groupIf.(string)
 				if ok {
@@ -74,19 +73,10 @@ func GetScopeValues(claims jwtgo.MapClaims, scopes []string) []string {
 	return groups
 }
 
-func GetID(m jwtgo.MapClaims) (string, error) {
-	if jtiIf, ok := m["jti"]; ok {
-		if jti, ok := jtiIf.(string); ok {
-			return jti, nil
-		}
-	}
-	return "", fmt.Errorf("jti '%v' is not a string", m["jti"])
-}
-
 func numField(m jwtgo.MapClaims, key string) (int64, error) {
 	field, ok := m[key]
 	if !ok {
-		return 0, errors.New("token does not have iat claim")
+		return 0, fmt.Errorf("token does not have %s claim", key)
 	}
 	switch val := field.(type) {
 	case float64:
@@ -117,7 +107,7 @@ func ExpirationTime(m jwtgo.MapClaims) (time.Time, error) {
 	return time.Unix(exp, 0), err
 }
 
-func Claims(in interface{}) jwtgo.Claims {
+func Claims(in any) jwtgo.Claims {
 	claims, ok := in.(jwtgo.Claims)
 	if ok {
 		return claims

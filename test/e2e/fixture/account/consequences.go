@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apiclient/session"
+	"github.com/argoproj/argo-cd/v3/pkg/apiclient/session"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apiclient/account"
-	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
-	. "github.com/argoproj/argo-cd/v2/util/errors"
-	"github.com/argoproj/argo-cd/v2/util/io"
+	"github.com/argoproj/argo-cd/v3/pkg/apiclient/account"
+	"github.com/argoproj/argo-cd/v3/test/e2e/fixture"
+	. "github.com/argoproj/argo-cd/v3/util/errors"
+	"github.com/argoproj/argo-cd/v3/util/io"
 )
 
 // this implements the "then" part of given/when/then
@@ -21,6 +21,12 @@ type Consequences struct {
 func (c *Consequences) And(block func(account *account.Account, err error)) *Consequences {
 	c.context.t.Helper()
 	block(c.get())
+	return c
+}
+
+func (c *Consequences) AndCLIOutput(block func(output string, err error)) *Consequences {
+	c.context.t.Helper()
+	block(c.actions.lastOutput, c.actions.lastError)
 	return c
 }
 

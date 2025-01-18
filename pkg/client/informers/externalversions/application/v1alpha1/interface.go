@@ -3,7 +3,7 @@
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/argoproj/argo-cd/v2/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/argoproj/argo-cd/v3/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.
@@ -12,6 +12,8 @@ type Interface interface {
 	AppProjects() AppProjectInformer
 	// Applications returns a ApplicationInformer.
 	Applications() ApplicationInformer
+	// ApplicationSets returns a ApplicationSetInformer.
+	ApplicationSets() ApplicationSetInformer
 }
 
 type version struct {
@@ -33,4 +35,9 @@ func (v *version) AppProjects() AppProjectInformer {
 // Applications returns a ApplicationInformer.
 func (v *version) Applications() ApplicationInformer {
 	return &applicationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ApplicationSets returns a ApplicationSetInformer.
+func (v *version) ApplicationSets() ApplicationSetInformer {
+	return &applicationSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
